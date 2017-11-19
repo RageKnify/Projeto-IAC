@@ -28,46 +28,48 @@
 	tentativa                        8008         VARIABLE
 	tentativa_m                      8009         VARIABLE
 	n_jogo                           800A         VARIABLE
+	acertou                          800B         VARIABLE
 	INTAF                            0006            LABEL
 	INTFF                            000D            LABEL
 	ran                              001D            LABEL
 	E_PAR                            0029            LABEL
 	ran_p                            0030            LABEL
 	ran_i                            0032            LABEL
-	ran_d                            0035            LABEL
+	ran_ambos                        0035            LABEL
 	c_div6                           0039            LABEL
 	output                           004F            LABEL
-	X_                               0086            LABEL
-	n_acaba                          008D            LABEL
-	C_x                              008F            LABEL
-	O_                               0097            LABEL
-	C_o                              009B            LABEL
-	Trc                              00A3            LABEL
-	C_trc                            00A7            LABEL
-	fim_out                          00AF            LABEL
-	atua_R3                          00B0            LABEL
-	Conta_x                          00B2            LABEL
-	Ciclo_x                          00B8            LABEL
-	Conta_o                          00BF            LABEL
-	Ciclo_o                          00C3            LABEL
-	Conta_t                          00CA            LABEL
-	Ciclo_t                          00D3            LABEL
-	next                             00D6            LABEL
-	mais_nove                        00D9            LABEL
-	c_certa                          00E8            LABEL
-	ciclo_ROR                        00F1            LABEL
-	c_errada                         0101            LABEL
-	r_certo                          0115            LABEL
-	r_tenta                          011D            LABEL
-	r_t_                             0121            LABEL
-	sep_R3                           012A            LABEL
-	l_sep_R3                         0134            LABEL
-	dois                             013B            LABEL
-	um_zero                          0147            LABEL
-	zero                             014F            LABEL
-	f_sep_R3                         0153            LABEL
-	input                            0157            LABEL
-	inicio                           015A            LABEL
-	novo_jogo                        0163            LABEL
-	c_tents                          0168            LABEL
-	fim                              0196            LABEL
+	X_                               0089            LABEL
+	n_acaba                          0092            LABEL
+	C_x                              0094            LABEL
+	O_                               009C            LABEL
+	C_o                              00A0            LABEL
+	Trc                              00A8            LABEL
+	C_trc                            00AC            LABEL
+	fim_out                          00B4            LABEL
+	atua_R3                          00B8            LABEL
+	Conta_x                          00BC            LABEL
+	Ciclo_x                          00C2            LABEL
+	Conta_o                          00C9            LABEL
+	Ciclo_o                          00CD            LABEL
+	Conta_t                          00D4            LABEL
+	Ciclo_t                          00DD            LABEL
+	next                             00E0            LABEL
+	mais_nove                        00E3            LABEL
+	p_certa                          00F2            LABEL
+	c_certa                          00FA            LABEL
+	ciclo_ROR                        0103            LABEL
+	c_errada                         0119            LABEL
+	r_certo                          012D            LABEL
+	r_tenta                          0135            LABEL
+	r_t_                             0139            LABEL
+	sep_R3                           0142            LABEL
+	l_sep_R3                         014C            LABEL
+	dois                             0153            LABEL
+	um_zero                          015F            LABEL
+	zero                             0167            LABEL
+	f_sep_R3                         016B            LABEL
+	input                            016F            LABEL
+	inicio                           0172            LABEL
+	novo_jogo                        017B            LABEL
+	c_tents                          0180            LABEL
+	fim                              01AE            LABEL
