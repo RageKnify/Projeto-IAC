@@ -1,0 +1,296 @@
+SP_INICIAL  EQU		FDFFh
+IO			EQU     FFFEh
+NL			EQU     000Ah
+MASC    	EQU     1000000000010110b
+			
+			ORIG	8000h
+certos		WORD	0
+errados		WORD	0
+cruzes		WORD	0
+bolas		WORD	0
+tracos		WORD	0
+			ORIG	0000h
+			MOV     R7,SP_INICIAL
+			MOV     SP,R7
+			MOV		R7,R0
+			JMP		inicio
+			
+ran:    MOV		R1,2323h	;utiliza a funcao pseudo-aleatoria para escolher a sequencia secreta
+		MOV		R2,R1
+		AND		R2,1h		;ve se o N0 e par
+		CMP     R2,0
+        BR.Z    ran_p
+        BR      ran_i
+ran_p:  ROR     R1,1
+        BR      ran_d
+ran_i:  XOR     R1,MASC
+        ROR     R1,1
+ran_d:  MOV		R3,0		;vai dividir por 6 e somar 1 a cada digito para que os digitos estejam entre 1 e 6
+        MOV		R4,R1
+        AND     R1,F000h	;16 ** 3
+        SHR     R1,12
+        MOV     R2,6
+        DIV     R1,R2
+        MOV     R1,R2
+        INC     R1
+        SHL		R1,12
+        ADD     R3,R1
+        
+        MOV     R1,R4		;16 ** 2
+        AND     R1,F00h
+        SHR     R1,8
+        MOV     R2,6
+        DIV     R1,R2
+        MOV     R1,R2
+        INC     R1
+		SHL		R1,8
+        ADD     R3,R1
+        
+        MOV     R1,R4      ;16 ** 1
+        AND     R1,F0h
+        SHR     R1,4
+        MOV     R2,6
+        DIV     R1,R2
+        MOV     R1,R2
+        INC     R1
+		SHL		R1,4
+        ADD    	R3,R1
+        
+        MOV     R1,R4      ;16 ** 0
+        AND     R1,Fh
+        MOV     R2,6
+        DIV     R1,R2
+        MOV     R1,R2
+        INC     R1
+        ADD     R3,R1
+		MOV		R1,R3
+		RET		
+		
+output: MOV		R1,NL		;passa a proxima linha antes de escrever
+		MOV		M[IO],R1
+		MOV     R1,M[SP+4]	;coloca a tentativa em R1
+        AND     R1,F000h    ;imprime a tentaiva letra a letra
+        SHR     R1,12
+        ADD     R1,48
+        MOV     M[IO],R1
+        MOV     R1, '-'
+        MOV     M[IO], R1
+        MOV     R1,M[SP+4]
+        AND     R1,F00h
+        SHR     R1,8
+        ADD     R1,48
+        MOV     M[IO],R1
+        MOV     R1, '-'
+        MOV     M[IO], R1
+        MOV     R1,M[SP+4]
+        AND     R1,F0h
+        SHR     R1,4
+        ADD     R1,48
+        MOV     M[IO],R1
+        MOV     R1, '-'
+        MOV     M[IO], R1
+        MOV     R1,M[SP+4]
+        AND     R1,Fh
+        ADD     R1,48
+        MOV     M[IO],R1
+        MOV     R1,' '          ;imprime um espaco antes do resultado
+        MOV     M[IO],R1
+X_:     MOV     R4,M[cruzes]    ;retira o numero de cruzes
+        CMP		R4,4
+		BR.NZ	n_acaba
+		MOV		R6,1
+n_acaba:MOV     R5,0
+C_x:    CMP     R5,R4
+        BR.Z    O_
+        MOV     R1, 'x'
+        MOV     M[IO], R1		;imprime as cruzes
+        INC     R5
+        BR      C_x
+O_:     MOV     R4,M[bolas]     ;retira o numero de bolas
+        MOV     R5,0
+C_o:    CMP     R5,R4
+        BR.Z    Trc
+        MOV     R1, 'o'
+        MOV     M[IO], R1		;imprime as bolas
+        INC     R5
+        BR      C_o
+Trc:    MOV     R4,M[tracos]	;retira o numero de tracos
+        MOV     R5,0
+C_trc:  CMP     R5,R4
+        BR.Z	fim_out			;depois de imprimir todos vai retornar
+        MOV     R1, '-'
+        MOV     M[IO], R1		;imprime os tracos
+        INC     R5
+        BR      C_trc
+fim_out:RET
+
+
+atua_R3:	MOV		R3,0
+Conta_x:    MOV     R4,M[certos]	;retira o numero de algarismos na posicao certa
+			MOV     R5,0
+			MOV		R3,0
+Ciclo_x:    CMP     R5,R4
+			BR.Z    Conta_o
+			SHL		R3,4
+			ADD		R3,2			;codifica o R3, posicoes certas escreve 2
+			INC     R5
+			BR      Ciclo_x
+		
+Conta_o:    MOV     R4,M[errados]	;retira o numero de numeros na posicao errada
+			MOV     R5,0
+Ciclo_o:    CMP     R5,R4
+			BR.Z    Conta_t
+			SHL		R3,4
+			ADD		R3,1			;codifica o R3, posicoes erradas escreve 1
+			INC     R5
+			BR      Ciclo_o
+		
+Conta_t:    MOV     R5,M[certos]
+			ADD     R5,M[errados]
+			MOV     R4,4
+			SUB     R4,R5
+			MOV     R5,0
+Ciclo_t:  	CMP     R5,R4
+			BR.NZ  next
+			RET
+next:		SHL		R3,4			;codifica o R3, algarismos errados escreve 0
+			INC     R5
+			BR      Ciclo_t
+			
+			
+mais_nove:	MOV		R5,M[SP+5]	;mais_nove > poe na posiçao um algarismo incompativel
+			ADD		R5,8h		;adiciona 8 para ter um algarismo maior que 6
+			MOV		M[SP+5],R5
+			MOV		R5,M[SP+4]
+			ADD		R5,9h		;adiciona 9 para ter um algarismo maior que 6(nao pode ser 8 porque seria 'x' e 'o'
+			MOV		M[SP+4],R5
+			RET
+			
+			
+c_certa:	AND		R1,Fh		;ficam os 4 bits menos significativos
+			AND		R2,Fh
+			CMP		R1,R2		;ve se 4 menos significativos correspondem ao mesmo numero
+			BR.NZ	ciclo_ROR	;caso nao sejam iguais > ciclo_ROR para passar ao proximo algarismo
+			INC		R4			;caso sejam iguais incrementa contador respostas corretas
+			PUSH	R5			;guardar R5(contador de ciclos_ROR), funçao estraga-o
+			CALL	mais_nove	;alteramos os algarismos que eram iguais
+			POP		R5			;reavem o R5
+ciclo_ROR:	MOV		R1,M[SP+3]	;coloca a sequencia secreta no R1
+			MOV		R2,M[SP+2]	;coloca a tentaiva no R2
+			ROR		R1,4		;passa ao proximo algarismo
+			ROR		R2,4
+			MOV		M[SP+3],R1	;coloca de volta na pilha
+			MOV		M[SP+2],R2	
+			INC		R5			;incrementa contador de ciclos_ROR
+			CMP		R5,4		;verifica se verificou os 4 algarismos, se sim retorna
+			JMP.NZ	c_certa
+			RET
+
+			
+c_errada:	CMP		R5,4		;verifica se testou os 4 algarismos da sequencia secreta
+			JMP.Z	r_tentativa	;se sim passar ao proximo algarismo da tentativa
+			MOV		R1,M[SP+3]	;coloca a sequencia secreta no R1
+			MOV		R2,M[SP+2]	;coloca a tentativa no R2
+			AND		R1,Fh		;ficam os 4 bits menos significativos
+			AND		R2,Fh
+			CMP		R1,7h		;verifica se o algarismo e menor que 7
+			BR.NN	rodar_certo	;se for > 7 rodar para o proximo algarismo
+			CMP		R1,R2		;se for < 7 comparar com o algarismo da tentativa
+			BR.NZ	rodar_certo	;se forem diferentes rodar para o proximo algarismo
+			INC		R4			;se forem iguais aumentar o contador de respostas corretas
+			PUSH	R5			;guardar R5 contador de rotacoes da sequecia, funçao usa R5
+			CALL	mais_nove	;alteramos os algarismos que eram iguais
+			POP		R5			;reavem o R5
+rodar_certo:MOV		R1,M[SP+3]	;coloca a sequencia secreta no R1
+			ROR		R1,4		;roda para o proximo lagarismo
+			MOV		M[SP+3],R1	;coloca de volta na pilha
+			INC		R5			;incrementar contador de rotacoes da sequencia
+			JMP		c_errada	;testar com o novo algarismo da sequencia
+r_tentativa:CMP		R3,4		;verifica se testou os 4 algarismos da tentativa
+			BR.NZ	1			;se tiver, retornar
+			RET
+			MOV		R1,M[SP+2]	;colocar a tentativa em R1
+			ROR		R1,4		;rodar para o proximo algarismo da tentativa
+			MOV		M[SP+2],R1	;colocar de volta na pilha
+			INC		R3			;incrementar contador de rotacoes da tentativa
+			MOV		R5,R0		;reiniciar contador de rotacoes da sequencia
+			JMP		c_errada	;testar com o novo algarismo da tentativa
+
+			
+sep_R3:		MOV		R2,R0		;poe o R2 a 0 para o utilizar
+			MOV		M[cruzes],R0;poe os contadores de cruzes, bolas e tracos a 0
+			MOV		M[bolas],R0
+			MOV		M[tracos],R0
+l_sep_R3:	CMP		R2,4		;ve se ja passou pelos 4 algarismos de R3
+			BR.NZ	dois		;se nao tiver testar para 2
+			RET					;se ja tiver passado por todos retornar
+dois:		ROL		R3,4		;rodar para o primeiro algarismo
+			PUSH	R3			;guardar R3
+			AND		R3,Fh		;ficar com o 4o algarismo
+			CMP		R3,2		;comparar o algarismo com 2
+			BR.NZ	um_zero		;se for 2 aumentar o contador das cruzes
+			MOV		R1,1
+			ADD		M[cruzes],R1
+			BR		f_sep_R3	;finalizar loop
+um_zero:	CMP		R3,1		;comparar o algarismo com 1
+			BR.NZ	zero		;se for 1 aumentar o contador das bolas
+			MOV		R1,1
+			ADD		M[bolas],R1
+			BR		f_sep_R3	;finalizar loop
+zero:		MOV		R1,1		;se R1 != 2 e R1 != 1 entao R1 = 0, logo podemos aumentar o contador de tracos
+			ADD		M[tracos],R1
+f_sep_R3:	INC		R2			;incrementar o contador de algarismos verificados
+			POP		R3			;recuperar R3 para o proximo algarismo
+			JMP		l_sep_R3	;voltar ao inicio do loop
+
+			
+input:		CMP		R2,R0	;cria um loop 'a espera que o utilizador escreva a tentativa em R2
+			BR.Z	input
+			RET
+
+			
+inicio:		CALL	ran		;cria o codigo secreto e guarda-o em R1
+			
+c_tents:	CMP		R7,12	; ve se ja foram feitas 12 jogadas
+			JMP.Z	fim		; se sim acaba jogo
+			PUSH	R7		; guarda contador de jogadas
+			MOV		R2,R0	;limpa R2 para receber tentativa nova
+			CALL	input	;receber nova tentativa
+			PUSH	R1		;guarda sequencia
+			PUSH	R2		;guarda tentativa
+			PUSH	R1		;guarda sequencia que vai ser alterada
+			PUSH	R2		;guarda tentativa que vai ser alterada
+			MOV		R3,R0		;contador de ciclos a zero
+			MOV		R4,R0		;contador de algarismos na posicao certas a zero
+			MOV		R5,R0		;contador de ciclos a zero
+			CALL	c_certa		;verificar se ha algum algarismo na posicao certa
+			MOV		M[certos],R4;guarda numero de algarismos na posicao certa na memoria
+			MOV 	R3,R0		;contador de ciclos a zero
+			MOV 	R4,R0		;contador de algarismos na posicao errada a zero
+			MOV 	R5,R0		;contador de ciclos a zero
+			CALL	c_errada	;verificar se ha algum algarismo na posicao certa
+			MOV		M[errados],R4;guarda numero de algarismos na posicao errada na memoria
+			CALL	atua_R3		;codifica R3 
+			CALL	sep_R3		;descodifica R3
+			CALL	output		;escreve o output na janela de texto
+			CMP		R6,1		;se tiver acertado nesta tentativa acaba o jogo
+			JMP.Z	fim
+			POP		R0			;limpa o stack
+			POP		R0
+			POP		R0
+			POP		R1			;reavem a sequencia secreta
+			POP		R7			;reavem contador de jogadas
+			INC		R7			;incrementa o contador de jogadas
+			JMP		c_tents		;comeca uma nova jogadas
+			
+		
+fim:		BR		fim
+
+
+
+
+
+
+
+
+
