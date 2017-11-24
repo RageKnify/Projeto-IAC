@@ -85,7 +85,7 @@ c_div6:		MOV		R2,Fh
 			INC		R4
 			CMP		R4,4
 			BR.NZ	c_div6
-			MOV		M[codigo],R3;guarda o novo codigo na memoria
+			MOV		M[codigo],R3	;guarda o novo codigo na memoria
 			POP		R5
 			POP		R4
 			POP		R3
@@ -233,7 +233,12 @@ ciclo_ROR:	MOV		R1,M[codigo_m]	;coloca a sequencia secreta no R1
 			POP		R1
 			RET
 			
-c_errada:	CMP		R5,4		;verifica se testou os 4 algarismos da sequencia secreta
+c_errada:	PUSH	R1
+			PUSH	R2
+			PUSH	R3
+			PUSH	R4
+			PUSH	R5
+			CMP		R5,4		;verifica se testou os 4 algarismos da sequencia secreta
 			JMP.Z	r_tenta		;se sim passar ao proximo algarismo da tentativa
 			MOV		R1,M[codigo_m]	;coloca a sequencia secreta no R1
 			MOV		R2,M[tentativa_m]	;coloca a tentativa no R2
@@ -252,6 +257,12 @@ r_certo:	MOV		R1,M[codigo_m]	;coloca a sequencia secreta no R1
 			JMP		c_errada	;testar com o novo algarismo da sequencia
 r_tenta:	CMP		R3,4		;verifica se testou os 4 algarismos da tentativa
 			BR.NZ	r_t_		;se tiver, retornar
+			MOV		M[errados],R4
+			POP		R5
+			POP		R4
+			POP		R3
+			POP		R2
+			POP		R1
 			RET
 r_t_:		MOV		R2,M[tentativa_m];colocar a tentativa em R2
 			ROR		R2,4			;rodar para o proximo algarismo da tentativa
@@ -318,15 +329,8 @@ c_tents:	CMP		R7,12	; ve se ja foram feitas 12 jogadas
 			MOV		M[codigo_m],R1
 			MOV		M[tentativa],R2
 			MOV		M[tentativa_m],R2
-			MOV		R3,R0		;contador de ciclos a zero
-			MOV		R4,R0		;contador de algarismos na posicao certas a zero
-			MOV		R5,R0		;contador de ciclos a zero
 			CALL	p_certa		;verificar se ha algum algarismo na posicao certa
-			MOV 	R3,R0		;contador de ciclos a zero
-			MOV 	R4,R0		;contador de algarismos na posicao errada a zero
-			MOV 	R5,R0		;contador de ciclos a zero
 			CALL	c_errada	;verificar se ha algum algarismo na posicao certa
-			MOV		M[errados],R4;guarda numero de algarismos na posicao errada na memoria
 			MOV		R1,M[codigo]
 			CALL	atua_R3		;codifica R3 
 			CALL	sep_R3		;descodifica R3

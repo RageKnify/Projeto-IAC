@@ -49,23 +49,35 @@ digito			WORD	0
 				
 				
 ;interrupcoes das teclas
-INT1F:		MOV		R1,1
+INT1F:		PUSH	R1
+			MOV		R1,1
 			MOV		M[digito],R1
+			POP		R1
 			RTI	
-INT2F:		MOV		R1,2
+INT2F:		PUSH	R1
+			MOV		R1,2
 			MOV		M[digito],R1
+			POP		R1
 			RTI	
-INT3F:		MOV		R1,3
+INT3F:		PUSH	R1
+			MOV		R1,3
 			MOV		M[digito],R1
+			POP		R1
 			RTI	
-INT4F:		MOV		R1,4
+INT4F:		PUSH	R1
+			MOV		R1,4
 			MOV		M[digito],R1
+			POP		R1
 			RTI	
-INT5F:		MOV		R1,5
+INT5F:		PUSH	R1
+			MOV		R1,5
 			MOV		M[digito],R1
+			POP		R1
 			RTI	
-INT6F:		MOV		R1,6
+INT6F:		PUSH	R1
+			MOV		R1,6
 			MOV		M[digito],R1
+			POP		R1
 			RTI	
 			
 			
