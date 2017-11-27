@@ -1,3 +1,9 @@
+;para usar estas funcoes e necessario usar o seguinte metodo:
+;PUSH	R0 ;vai receber o resultado
+;PUSH	R1 ;valor que queremos codificar/descodificar
+;CALL	codi_12/descodi_12
+;POP	R1 ;resultado da codificacao/descodificacao
+
 
 codi_12:	PUSH	R1		
 			PUSH	R2
