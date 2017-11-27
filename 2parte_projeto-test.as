@@ -275,7 +275,6 @@ r_t_:		MOV		R2,M[tentativa_m];colocar a tentativa em R2
 sep_R3:		PUSH	R1
 			PUSH	R2
 			PUSH	R3
-			MOV		R2,R0		;poe o R2 a 0 para o utilizar
 			MOV		M[cruzes],R0;poe os contadores de cruzes, bolas e tracos a 0
 			MOV		M[bolas],R0
 			MOV		M[tracos],R0
@@ -344,12 +343,3 @@ c_tents:	CMP		R7,12	; ve se ja foram feitas 12 jogadas
 			
 		
 fim:		BR		fim
-
-
-
-
-
-
-
-
-
