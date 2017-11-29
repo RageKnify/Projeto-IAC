@@ -140,7 +140,7 @@ INTAF:				PUSH	R1          ; coloca novo_jogo a 1 para que se recomece o jogo
 ;**********************************************************************************
 ;*********************Codificar 16-> 12***************************************
 
-codi_12:    PUSH   R1
+codi_12:    PUSH    R1
             PUSH    R2
             PUSH    R3
             PUSH    R4
@@ -154,12 +154,12 @@ c_codi:     MOV     R2,7h
             CMP     R4,4
             BR.NZ   c_codi
             ROR     R3,4
-            MOV     M[SP+7],R3  ;coloca o valor na resposta
+            MOV     M[SP+6],R3  ;coloca o valor na resposta
             POP     R4
             POP     R3
             POP     R2
             POP     R1
-            RETN    1
+            RET
 
 
 ;**********************************************************************************
@@ -643,7 +643,7 @@ fim_hsc:	POP		R4
 				
 ;***********************************************************************************				
 ;***********************************************************************************	
-ganhou:				POP		R1
+ganhou:		POP		R1
 					MOV		M[acertou],R0
 					PUSH	R1
 					MOV		R1,STR_ganhou
@@ -656,19 +656,19 @@ ganhou:				POP		R1
 					CALL	esc_hsc
 					JMP		novo_jogo
 
-perdeu:				POP		R1
-					MOV		M[perdeu_jogo],R0	;reinicia variavel
-					PUSH	R1
-					MOV		R1,STR_perdeu_jogo	;escreve que perdeu
-					PUSH	R1					;o ciclo remove este PUSH
-					CALL	esc_linha_seg
-					MOV		R1,STR_recomecar
-					PUSH	R1						;escreve para reiniciar
-					CALL	esc_linha_seg
-					MOV		R1,12
-					MOV		M[cont_jogadas],R1
-					CALL	esc_hsc
-					POP		R1
+perdeu:   POP		R1
+          MOV		M[perdeu_jogo],R0	;reinicia variavel
+          PUSH	R1
+          MOV		R1,STR_perdeu_jogo	;escreve que perdeu
+          PUSH	R1					;o ciclo remove este PUSH
+          CALL	esc_linha_seg
+          MOV		R1,STR_recomecar
+          PUSH	R1						;escreve para reiniciar
+          CALL	esc_linha_seg
+          MOV		R1,12
+          MOV		M[cont_jogadas],R1
+          CALL	esc_hsc
+          POP		R1
 
 novo_jogo:			PUSH  R1
 					MOV  R1,M[contador]
@@ -700,15 +700,15 @@ nova_tentat:		MOV		M[tentativa],R0
 					CALL	ligar_leds
 					PUSH	R1
 					MOV		R1,M[perdeu_jogo]
-					CMP		R1,R0				;se perdeu o jogo nao chama ciclo das tentativas faz logo novo jogo
+          CMP     R1,R0       ;se perdeu o jogo nao chama ciclo das tentativas faz logo novo jogo
 					JMP.NZ	perdeu
-					POP		R1
+					POP		  R1
 					PUSH    R1
-					MOV     R1,M[codigo]     ; passa o codigo para 12 bits e escree-o de volta na memoria
+					MOV     R1,M[tentativa]     ; passa a tentativa para 12 bits e escre-o de volta na memoria
 					PUSH    R1
 					CALL    codi_12
 					POP     R1
-					MOV     M[codigo],R1
+					MOV     M[tentativa],R1
 					POP     R1
 					CALL	c_tents
 					PUSH	R1
@@ -717,7 +717,7 @@ nova_tentat:		MOV		M[tentativa],R0
 					JMP.NZ	ganhou
 					MOV		R1,M[perdeu_jogo]	;caso tenha perdido o jogo reinicia
 					CMP		R1,0
-					JMP.NZ	perdeu				
+					JMP.NZ	perdeu
 					POP		R1
 					JMP		nova_tentat
 				
