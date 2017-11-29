@@ -1,87 +1,87 @@
-SP_INICIAL  		EQU		FDFFh
-FIM_STR 			EQU 	'@'
-IO_TEMP				EQU	FFF6h
-IO_TC				EQU	FFF7h
-INT_MASK_ADDR		EQU FFFAh
-INT_MASK 			EQU 1000010001111110b
-IO					EQU     FFFEh
-IO_CURSOR			EQU		FFFCh
-IO_DISPLAY0 EQU FFF0h
-IO_DISPLAY1 EQU FFF1h
-LCD_CURSOR	EQU		FFF4h
-LCD			EQU		FFF5h
-MASC		EQU		1000000000010110b
+SP_INICIAL      EQU     FDFFh
+FIM_STR         EQU     '@'
+IO_TEMP         EQU     FFF6h
+IO_TC           EQU     FFF7h
+INT_MASK_ADDR   EQU     FFFAh
+INT_MASK        EQU     1000010001111110b
+IO              EQU     FFFEh
+IO_CURSOR       EQU     FFFCh
+IO_DISPLAY0     EQU     FFF0h
+IO_DISPLAY1     EQU     FFF1h
+LCD_CURSOR      EQU     FFF4h
+LCD             EQU     FFF5h
+MASC            EQU     1000000000010110b
 
 
 
 ;*************************************************************************************
 ;****************************MEMORIA*************************************************
 
-					ORIG	8000h
-tentativa			WORD	0	;tentativa nao modificavel
-tentativa_m			WORD	0	;tentativa modificavel
-codigo				WORD	0	;codigo nao modificavel
-codigo_m			WORD	0	;codigo modificavel
-loc_cursor			WORD	0	;localizaçao do cursor da janela de texto
-novo_jogo_			WORD	0	; variavel que define se se deve comecar um novo jogo
-cont_jogadas		WORD	0	;contador de jogadas == pont_act
-acertou				WORD	0	;se acertou esta a 1 
-perdeu_jogo			WORD	0	; 1 ou 0 consoante perdeu jogo ou nao
-apaga_led			WORD	0	;se for para apagae algum led esta a 1
-cron				WORD	0
-recorde				WORD	12
-contador    		WORD  	0
-certos				WORD	0	;contador de certos	
-errados				WORD	0	;contador errados
-cruzes				WORD	0	;contador cruzes
-bolas				WORD	0	;contador bolas
-tracos				WORD	0	;contador traços
+                ORIG    8000h
+tentativa           WORD    0    ;tentativa nao modificavel
+tentativa_m         WORD    0    ;tentativa modificavel
+codigo              WORD    0    ;codigo nao modificavel
+codigo_m            WORD    0    ;codigo modificavel
+loc_cursor          WORD    0    ;localizaçao do cursor da janela de texto
+novo_jogo_          WORD    0    ; variavel que define se se deve comecar um novo jogo
+cont_jogadas        WORD    0    ;contador de jogadas == pont_act
+acertou             WORD    0    ;se acertou esta a 1 
+perdeu_jogo         WORD    0    ; 1 ou 0 consoante perdeu jogo ou nao
+apaga_led           WORD    0    ;se for para apagae algum led esta a 1
+cron                WORD    0
+recorde             WORD    12
+contador            WORD    0
+certos              WORD    0    ;contador de certos    
+errados             WORD    0    ;contador errados
+cruzes              WORD    0    ;contador cruzes
+bolas               WORD    0    ;contador bolas
+tracos              WORD    0    ;contador traços
 
-VarStr_INICIO_JOGO	STR 	'Carregue no botao IA para iniciar@'
-STR_perdeu_jogo		STR		'Fim do jogo@'
-STR_recomecar		STR		'Carregue em IA para recomecar@'
-STR_ganhou			STR		'Parabens, teve sorte@'
-VarStr_recorde	STR 	'RECORDE --> @'
+VarStr_INICIO_JOGO  STR     'Carregue no botao IA para iniciar@'
+STR_perdeu_jogo     STR        'Fim do jogo@'
+STR_recomecar       STR        'Carregue em IA para recomecar@'
+STR_ganhou          STR        'Parabens, teve sorte@'
+VarStr_recorde      STR     'RECORDE --> @'
 
 
 ;*************************************************************************************
 ;**************************INTERRUPÇOES*********************************************
-			ORIG	FE01h
-INT1		WORD	INT1F
-INT2		WORD	INT2F
-INT3		WORD	INT3F
-INT4		WORD	INT4F
-INT5		WORD	INT5F
-INT6		WORD	INT6F
+            ORIG    FE01h
+INT1        WORD    INT1F
+INT2        WORD    INT2F
+INT3        WORD    INT3F
+INT4        WORD    INT4F
+INT5        WORD    INT5F
+INT6        WORD    INT6F
 
-			ORIG	FE0Fh
-INTF		WORD 	INTFF ; key15
-			ORIG	FE0Ah
-INTA		WORD	INTAF	; key A
+            ORIG    FE0Fh
+INTF        WORD     INTFF ; key15
+            ORIG    FE0Ah
+INTA        WORD    INTAF    ; key A
 
 
 
 
 ;*************************************************************************************
 ;**********************************CODIGO********************************************
-			ORIG	0000h
-			MOV     R7,SP_INICIAL
-			MOV     SP,R7
-			MOV 	R7, INT_MASK
-			MOV 	M[INT_MASK_ADDR], R7
-			MOV		R7,FFFFh			
-			MOV		M[IO_CURSOR],R7			;para se poder mecher no cursor
-			MOV		R7,R0
-			JMP		inicio
+            ORIG    0000h
+            MOV     R7,SP_INICIAL
+            MOV     SP,R7
+            MOV     R7, INT_MASK
+            MOV     M[INT_MASK_ADDR], R7
+            MOV     R7,FFFFh            
+            MOV     M[IO_CURSOR],R7            ;para se poder mecher no cursor
+            MOV     R7,R0
+            JMP     inicio
 
 
-	
+
 
 ;**********************************************************************************
 ;**************************INPUT**************************************
 
 
-				
+
 ;interrupcoes das teclas
 ;colocam na variavel da tentativa o novo digito
 INT1F:		PUSH	R1
@@ -270,7 +270,7 @@ cicle:			MOV		M[IO_CURSOR],R1
 				BR		cicle
 fim_limpar:		MOV		M[loc_cursor],R0
 				MOV		M[IO_CURSOR],R0
-				;meter IO a zerpo
+				;meter IO a zero
 				POP		R2
 				POP		R1
 				RET
@@ -279,7 +279,7 @@ fim_limpar:		MOV		M[loc_cursor],R0
 ;***************************CODIGO SECRETO******************************************
 
 
-random:     PUSH	R1			; gera o numero dos jogos
+random:     	PUSH	R1			; gera o numero dos jogos
        			PUSH	R2
        			PUSH	R3
        			PUSH	R4
@@ -288,53 +288,53 @@ random:     PUSH	R1			; gera o numero dos jogos
        			CMP		R1,0
        			BR.NZ	E_PAR		;se houver aplica a funcao fornecida
        			MOV		R1,M[contador]	;se nao houver utiliza o segundo atual
-E_PAR:		MOV		R2,R1
+E_PAR:			MOV		R2,R1
        			AND		R2,1h		;ve se o N0 e par
        			CMP		R2,0
        			BR.Z    ran_p
        			BR      ran_i
-ran_p:		ROR     R1,1
+ran_p:			ROR     R1,1
        			BR      ran_ambos
-ran_i:  	XOR     R1,MASC
+ran_i:  		XOR     R1,MASC
                	ROR     R1,1
-ran_ambos: 	MOV		R3,0		;vai dividir por 6 e somar 1 a cada digito para que os digitos estejam entre 1 e 6
+ran_ambos: 		MOV		R3,0		;vai dividir por 6 e somar 1 a cada digito para que os digitos estejam entre 1 e 6
        			MOV		R4,0
-c_div6:		MOV		R2,Fh
-       			AND		R2,R1
-       			MOV		R5,6
-       			DIV		R2,R5
-       			INC		R5
-       			ADD		R3,R5
-       			ROR		R3,4
-       			ROR		R1,4
-       			INC		R4
-       			CMP		R4,4
-       			BR.NZ	c_div6
-       			MOV		M[codigo],R3	;guarda o novo codigo na memoria
-       			POP		R5
-       			POP		R4
-       			POP		R3
-       			POP		R2
-       			POP		R1
-       			RET
+c_div6:			MOV		R2,Fh
+                AND		R2,R1
+                MOV		R5,6
+                DIV		R2,R5
+                INC		R5
+                ADD		R3,R5
+                ROR		R3,4
+                ROR		R1,4
+                INC		R4
+                CMP		R4,4
+                BR.NZ	c_div6
+                MOV		M[codigo],R3	;guarda o novo codigo na memoria
+                POP		R5
+                POP		R4
+                POP     R3
+                POP     R2
+                POP     R1
+                RET
 
-				
+
 ;***********************************************************************************
 ;ciclo que escreve caracter a frente
-esc_frent:  PUSH	R1
-            MOV	    R1,M[loc_cursor]
-            MOV	    M[IO_CURSOR],R1
-            MOV	    R1,M[SP+3];mete o caracter num registo
-            MOV	    M[IO],R1
+esc_frent:  PUSH    R1
             MOV     R1,M[loc_cursor]
-            INC	    R1
-            MOV	    M[loc_cursor],R1
-            POP	    R1
+            MOV     M[IO_CURSOR],R1
+            MOV     R1,M[SP+3];mete o caracter num registo
+            MOV     M[IO],R1
+            MOV     R1,M[loc_cursor]
+            INC     R1
+            MOV     M[loc_cursor],R1
+            POP     R1
             RET
 ;***********************************************************************************				
-output: 	PUSH	R1
-			PUSH	R2
-			PUSH	R3
+output:     PUSH    R1
+            PUSH    R2
+            PUSH    R3
             MOV     R3,0
             MOV     R1,M[tentativa]
             ROL     R1,4
@@ -369,26 +369,26 @@ X_:         POP     R3               ;R3 fica com 0x0o onde 'x' e o numero de ce
             BR.N    n_acertou
             MOV     R2,1
             MOV     M[acertou],R2
-n_acertou:	MOV     R2,0
-C_x:    	CMP     R2,R3
-        	BR.Z    O_
-        	MOV     R1, 'x'
-        	PUSH	R1
-			CALL	esc_frent
-        	INC     R2
-        	BR      C_x
+n_acertou:  MOV     R2,0
+C_x:        CMP     R2,R3
+            BR.Z    O_
+            MOV     R1, 'x'
+            PUSH    R1
+            CALL    esc_frent
+            INC     R2
+            BR      C_x
 
 O_:         POP     R3
             PUSH    R3
             AND     R3,Fh           ;retira o numero de bolas
-        	MOV     R2,0
-C_o:    	CMP     R2,R3
-        	BR.Z    Trc
-        	MOV     R1, 'o'
-        	PUSH	R1
-			CALL	esc_frent
-        	INC     R2
-        	BR      C_o
+            MOV     R2,0
+C_o:        CMP     R2,R3
+            BR.Z    Trc
+            MOV     R1, 'o'
+            PUSH    R1
+            CALL    esc_frent
+            INC     R2
+            BR      C_o
 
 Trc:        POP     R3
             PUSH    R3
@@ -396,58 +396,58 @@ Trc:        POP     R3
             AND     R2,R3
             SHL     R3,8
             ADD     R3,R2
-        	MOV     R2,0
-C_trc:  	CMP     R2,R3
-        	BR.Z	fim_out			;depois de imprimir todos vai retornar
-        	MOV     R1, '-'
-        	PUSH	R1
-			CALL	esc_frent
-        	INC     R2
-        	BR      C_trc
-fim_out:	MOV		R1,M[loc_cursor] ;no fim do output deixa o cursor na linha seguinte
-			AND		R1,FF00h
-			ADD		R1,100h
-			MOV		M[loc_cursor],R1
-			MOV		M[IO_CURSOR],R1
-			POP		R3
-			POP		R2
-			POP		R1
-			RET
+            MOV     R2,0
+C_trc:      CMP     R2,R3
+            BR.Z    fim_out             ;depois de imprimir todos vai retornar
+            MOV     R1, '-'
+            PUSH    R1
+            CALL    esc_frent
+            INC     R2
+            BR      C_trc
+fim_out:    MOV     R1,M[loc_cursor]    ;no fim do output deixa o cursor na linha seguinte
+            AND     R1,FF00h
+            ADD     R1,100h
+            MOV     M[loc_cursor],R1
+            MOV     M[IO_CURSOR],R1
+            POP     R3
+            POP     R2
+            POP     R1
+            RET
 
 ;*****************************************************************************
-atua_R3:	PUSH	R1
-          PUSH	R2
-          MOV		R3,0
-Conta_x:  MOV   R1,M[certos]	;retira o numero de algarismos na posicao certa
-          MOV   R2,0
-Ciclo_x:  CMP   R2,R1
-          BR.Z  Conta_o
-          ADD		R3,1			;codifica o R3, posicoes certas escreve 2
-          INC   R2
-          BR    Ciclo_x
-Conta_o:  SHL   R3,8
-          MOV   R1,M[errados]	;retira o numero de numeros na posicao errada
-          MOV   R2,0
-Ciclo_o:  CMP   R2,R1
-          BR.Z  f_atua_R3
-          ADD		R3,1			;codifica o R3, posicoes erradas escreve 1
-          INC   R2
-          BR    Ciclo_o
-f_atua_R3:POP		R2
-          POP		R1
-          RET
-
-
-mais_nove:	PUSH	R1				;guardar R1(contador de ciclos_ROR), funçao estraga-o
-            MOV		R1,M[codigo_m]	;mais_nove > poe na posiçao um algarismo incompativel
-            AND		R1,FFF8h		;passa os 3 bits menos significativos para 0 para nao ser 'x' e 'o'
-            MOV		M[codigo_m],R1
-            MOV		R1,M[tentativa_m]
-            AND		R1,FFF8h		;passa os 3 bits menos significativos para 0 para nao ser 'x' e 'o'
-            MOV		M[tentativa_m],R1
-            POP		R1				;reavem o R1
+atua_R3:    PUSH    R1
+            PUSH    R2
+            MOV     R3,0
+Conta_x:    MOV     R1,M[certos]    ;retira o numero de algarismos na posicao certa
+            MOV     R2,0
+Ciclo_x:    CMP     R2,R1
+            BR.Z    Conta_o
+            ADD     R3,1            ;codifica o R3, posicoes certas escreve 2
+            INC     R2
+            BR      Ciclo_x
+Conta_o:    SHL     R3,8
+            MOV     R1,M[errados]   ;retira o numero de numeros na posicao errada
+            MOV     R2,0
+Ciclo_o:    CMP     R2,R1
+            BR.Z    f_atua_R3
+            ADD     R3,1            ;codifica o R3, posicoes erradas escreve 1
+            INC     R2
+            BR      Ciclo_o
+f_atua_R3:  POP     R2
+            POP      R1
             RET
-		
+
+
+mais_nove:  PUSH    R1                  ;guardar R1(contador de ciclos_ROR), funçao estraga-o
+            MOV     R1,M[codigo_m]      ;mais_nove > poe na posiçao um algarismo incompativel
+            AND     R1,FFF8h            ;passa os 3 bits menos significativos para 0 para nao ser 'x' e 'o'
+            MOV     M[codigo_m],R1
+            MOV     R1,M[tentativa_m]
+            AND     R1,FFF8h            ;passa os 3 bits menos significativos para 0 para nao ser 'x' e 'o'
+            MOV     M[tentativa_m],R1
+            POP     R1                  ;reavem o R1
+            RET
+
 
 p_certa:    PUSH	R1
             PUSH	R2
