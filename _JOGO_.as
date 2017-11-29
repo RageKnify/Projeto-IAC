@@ -140,25 +140,26 @@ INTAF:				PUSH	R1          ; coloca novo_jogo a 1 para que se recomece o jogo
 ;**********************************************************************************
 ;*********************Codificar 16-> 12***************************************
 
-codi_12:	PUSH	R1
-			PUSH	R2
-			PUSH	R3
-			PUSH	R4
-			MOV		R1,M[SP+6]	;le o valor que queremos codificar
-c_codi:		MOV		R2,7h
-			AND		R2,R1		;fica com 3 bits
-			ADD		R3,R2		;adiciona ao resultado
-			ROR		R1,4
-			ROR		R3,3
-			INC		R4			;faz uma vez para cada digito
-			CMP		R4,4
-			BR.NZ	c_codi
-			MOV		M[SP+7],R3	;coloca o valor na resposta
-			POP		R4
-			POP		R3
-			POP		R2
-			POP		R1
-			RETN	1
+codi_12:    PUSH   R1
+            PUSH    R2
+            PUSH    R3
+            PUSH    R4
+            MOV     R1,M[SP+6]  ;le o valor que queremos codificar
+c_codi:     MOV     R2,7h
+            AND     R2,R1       ;fica com 3 bits
+            ADD     R3,R2       ;adiciona ao resultado
+            ROR     R1,4
+            ROR     R3,3
+            INC     R4          ;faz uma vez para cada digito
+            CMP     R4,4
+            BR.NZ   c_codi
+            ROR     R3,4
+            MOV     M[SP+7],R3  ;coloca o valor na resposta
+            POP     R4
+            POP     R3
+            POP     R2
+            POP     R1
+            RETN    1
 
 
 ;**********************************************************************************
