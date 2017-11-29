@@ -3,7 +3,7 @@ FIM_STR 			EQU 	'@'
 IO_TEMP				EQU	FFF6h
 IO_TC				EQU	FFF7h
 INT_MASK_ADDR		EQU FFFAh
-INT_MASK 			EQU FFFFh
+INT_MASK 			EQU 1000010001111110b
 IO					EQU     FFFEh
 IO_CURSOR			EQU		FFFCh
 NL					EQU		000Ah
@@ -33,6 +33,7 @@ cron				WORD	0
 VarStr_INICIO_JOGO	STR 	'Carregue no botao IA para iniciar@'
 STR_perdeu_jogo		STR		'Fim do jogo@'
 STR_recomecar		STR		'Carregue em IA para recomecar@'
+STR_ganhou			STR		'Parabens, teve sorte@'
 
 
 ;*************************************************************************************
@@ -231,11 +232,13 @@ cicle:			MOV		M[IO_CURSOR],R1
 				SUB		R1,79
 				ADD		R1,100h
 				ROR		R1,8
-				CMP		R1,23
+				CMP		R1,24
 				BR.Z	fim_limpar
 				ROL		R1,8
 				BR		cicle
 fim_limpar:		MOV		M[loc_cursor],R0
+				MOV		M[IO_CURSOR],R0
+				;meter IO a zerpo
 				POP		R2
 				POP		R1
 				RET
@@ -261,45 +264,46 @@ esc_frent:	PUSH	R1
 			MOV		R1,M[SP+3];mete o caracter num registo
 			MOV		M[IO],R1
 			POP		R1
-			RET
+			RETN	1
 ;***********************************************************************************				
 output: 	PUSH	R1
 			PUSH	R2
 			PUSH	R3
-			MOV		R1,M[loc_cursor]
-			AND		R1,FF00h
-			ADD		R1,100h
-			MOV		M[loc_cursor],R1
-			MOV		M[IO_CURSOR],R1
-			;MOV		R1,NL		passa a proxima linha antes de escrever
-			;MOV		M[IO],R1
 			MOV     R1,M[tentativa]	;coloca a tentativa em R1
-        	AND     R1,F000h    ;imprime a tentaiva letra a letra
+        	AND     R1,F000h    ;imprime a tentativa letra a letra
         	SHR     R1,12
         	ADD     R1,48
-        	MOV     M[IO],R1
+        	MOV     M[IO],R1		;a primeira chamada chamada 
         	MOV     R1, '-'
-        	MOV     M[IO], R1
+			PUSH	R1
+			CALL	esc_frent
+        	;MOV     M[IO], R1
         	MOV     R1,M[tentativa]
         	AND     R1,F00h
         	SHR     R1,8
         	ADD     R1,48
-        	MOV     M[IO],R1
+			PUSH	R1
+			CALL	esc_frent
         	MOV     R1, '-'
-        	MOV     M[IO], R1
+			PUSH	R1
+			CALL	esc_frent
         	MOV     R1,M[tentativa]
         	AND     R1,F0h
         	SHR     R1,4
         	ADD     R1,48
-        	MOV     M[IO],R1
+			PUSH	R1
+			CALL	esc_frent
         	MOV     R1, '-'
-        	MOV     M[IO], R1
+			PUSH	R1
+			CALL	esc_frent
         	MOV     R1,M[tentativa]
         	AND     R1,Fh
         	ADD     R1,48
-        	MOV     M[IO],R1
+			PUSH	R1
+			CALL	esc_frent
         	MOV     R1,' '          ;imprime um espaco antes do resultado
-        	MOV     M[IO],R1
+        	PUSH	R1
+			CALL	esc_frent
 X_:     	MOV     R2,M[cruzes]    ;retira o numero de cruzes
         	CMP		R2,4			;ve se ha 4 cruzes (jogo acaba)
 			BR.NZ	n_acaba
@@ -309,7 +313,8 @@ n_acaba:	MOV     R3,0
 C_x:    	CMP     R3,R2
         	BR.Z    O_
         	MOV     R1, 'x'
-        	MOV     M[IO], R1		;imprime as cruzes
+        	PUSH	R1
+			CALL	esc_frent
         	INC     R3
         	BR      C_x
 O_:     	MOV     R2,M[bolas]     ;retira o numero de bolas
@@ -317,7 +322,8 @@ O_:     	MOV     R2,M[bolas]     ;retira o numero de bolas
 C_o:    	CMP     R3,R2
         	BR.Z    Trc
         	MOV     R1, 'o'
-        	MOV     M[IO], R1		;imprime as bolas
+        	PUSH	R1
+			CALL	esc_frent
         	INC     R3
         	BR      C_o
 Trc:    	MOV     R2,M[tracos]	;retira o numero de tracos
@@ -325,10 +331,16 @@ Trc:    	MOV     R2,M[tracos]	;retira o numero de tracos
 C_trc:  	CMP     R3,R2
         	BR.Z	fim_out			;depois de imprimir todos vai retornar
         	MOV     R1, '-'
-        	MOV     M[IO], R1		;imprime os tracos
+        	PUSH	R1
+			CALL	esc_frent
         	INC     R3
         	BR      C_trc
-fim_out:	POP		R3
+fim_out:	MOV		R1,M[loc_cursor]
+			AND		R1,FF00h
+			ADD		R1,100h
+			MOV		M[loc_cursor],R1
+			MOV		M[IO_CURSOR],R1
+			POP		R3
 			POP		R2
 			POP		R1
 			RET
@@ -532,11 +544,20 @@ esgotou_tent:MOV	R1,1
 				
 ;***********************************************************************************				
 ;***********************************************************************************	
-
+ganhou:				POP		R1
+					MOV		M[acertou],R0
+					PUSH	R1
+					MOV		R1,STR_ganhou
+					PUSH	R1
+					CALL	esc_linha_seg
+					MOV		R1,STR_recomecar
+					PUSH	R1						;escreve para reiniciar
+					CALL	esc_linha_seg
+					POP		R1
+					JMP		novo_jogo
 
 perdeu:				POP		R1
 					MOV		M[perdeu_jogo],R0	;reinicia variavel
-					MOV		M[acertou],R0
 					PUSH	R1
 					MOV		R1,STR_perdeu_jogo	;escreve que perdeu
 					PUSH	R1					;o ciclo remove este PUSH
@@ -568,7 +589,7 @@ nova_tentat:		MOV		M[tentativa],R0
 					JMP.NZ	perdeu				
 					MOV		R1,M[acertou]		;caso tenha acertado reinicia
 					CMP		R1,0
-					JMP.NZ	perdeu
+					JMP.NZ	ganhou
 					POP		R1
 					JMP		nova_tentat
 				
@@ -590,6 +611,7 @@ inicio:			PUSH	VarStr_INICIO_JOGO
 				
 ;***********************************************************************************	
 ;***********************************************************************************	
-
+;7 segmentos chamar no inicio da jogada antes input (leds)
+;quando acaba jogo atualizar highscore
 							
 fim:			BR		fim
