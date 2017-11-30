@@ -111,7 +111,7 @@
 	fim_hsc                          02B3            LABEL
 	ganhou                           02B8            LABEL
 	perdeu                           02CB            LABEL
-	novo_jogo                        02E0            LABEL
-	nova_tentat                      0300            LABEL
-	inicio                           0332            LABEL
-	fim                              0345            LABEL
+	novo_jogo                        02DC            LABEL
+	nova_tentat                      02FC            LABEL
+	inicio                           032E            LABEL
+	fim                              0341            LABEL

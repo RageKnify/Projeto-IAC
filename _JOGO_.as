@@ -651,7 +651,7 @@ ganhou:				POP		R1
 					PUSH	R1
 					MOV		R1,STR_ganhou
 					PUSH	R1
-					CALL	esc_linha_seg
+					CALL	passar_str
 					MOV		R1,STR_recomecar
 					PUSH	R1						;escreve para reiniciar
 					CALL	esc_linha_seg
@@ -664,13 +664,14 @@ perdeu:				POP		R1
 					PUSH	R1
 					MOV		R1,STR_perdeu_jogo	;escreve que perdeu
 					PUSH	R1					;o ciclo remove este PUSH
-					CALL	esc_linha_seg
+					CALL	passar_str
 					MOV		R1,STR_recomecar
 					PUSH	R1						;escreve para reiniciar
 					CALL	esc_linha_seg
-					MOV		R1,12
-					MOV		M[cont_jogadas],R1
-					CALL	esc_hsc
+					;MOV		R1,12
+					;MOV		M[cont_jogadas],R1
+					;CALL	esc_hsc
+					MOV		M[novo_jogo],R0
 					POP		R1
 
 novo_jogo:			PUSH  R1
