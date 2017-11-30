@@ -340,10 +340,11 @@ cic_output: ROL     R1,3
             CALL    esc_frent
 
 ;escreve os 'x's
-X_:         POP     R3               ;R3 fica com 0x0o onde 'x' e o numero de certas e 'o' e o numero de erradas
+;R3 tem com 0x0oh onde 'x' e o numero de certas e 'o' e o numero de erradas
+X_:         POP     R3
             PUSH    R3
-            SHR     R3,8
-            CMP     R3,4             ;ve se ha 4 cruzes (jogo acaba)
+            SHR     R3,8			;retira o numero de cruzes
+            CMP     R3,4			;ve se ha 4 cruzes (jogo acaba)
             BR.N    n_acertou
             MOV     R2,1
             MOV     M[acertou],R2
@@ -396,6 +397,9 @@ fim_out:	MOV		R1,M[loc_cursor] ;no fim do output deixa o cursor na linha seguint
 			RET
 
 ;*****************************************************************************
+
+;codifica o R3, R3 fica com 0x0oh
+;onde 'x' e o numero de certas e 'o' e o numero de erradas
 atua_R3:	PUSH	R1
           	PUSH	R2
           	MOV		R3,0
@@ -403,7 +407,7 @@ Conta_x:  	MOV		R1,M[certos]	;retira o numero de algarismos na posicao certa
           	MOV		R2,0
 Ciclo_x:  	CMP		R2,R1
           	BR.Z	Conta_o
-          	ADD		R3,1			;codifica o R3, posicoes certas escreve 2
+          	ADD		R3,1
           	INC   	R2
           	BR    	Ciclo_x
 Conta_o:  	SHL   	R3,8
@@ -411,25 +415,25 @@ Conta_o:  	SHL   	R3,8
           	MOV   	R2,0
 Ciclo_o:  	CMP   	R2,R1
           	BR.Z	f_atua_R3
-          	ADD		R3,1			;codifica o R3, posicoes erradas escreve 1
+          	ADD		R3,1
           	INC  	R2
           	BR    	Ciclo_o
 f_atua_R3:	POP		R2
           	POP		R1
           	RET
 
-
-mais_nove:	PUSH	R1				;guardar R1(contador de ciclos_ROR), funçao estraga-o
-            MOV		R1,M[codigo_m]	;mais_nove > poe na posiçao um algarismo incompativel
-            AND		R1,FFF8h		;passa os 3 bits menos significativos para 0 para nao ser 'x' e 'o'
+;destroi o digito atual da verificacao para nao ser contado mais do que uma vez
+del_digito:	PUSH	R1
+            MOV		R1,M[codigo_m]	;del_digito > poe na posiçao um algarismo incompativel
+            AND		R1,FFF8h		;passa o algarismo para 0 para nao ser 'x' e 'o'
             MOV		M[codigo_m],R1
             MOV		R1,M[tentativa_m]
-            AND		R1,FFF8h		;passa os 3 bits menos significativos para 0 para nao ser 'x' e 'o'
+            AND		R1,FFF8h		;passa o algarismo para 0 para nao ser 'x' e 'o'
             MOV		M[tentativa_m],R1
-            POP		R1				;reavem o R1
+            POP		R1
             RET
 
-
+;verifica se ha algarismos na posicao certa
 p_certa:    PUSH	R1
             PUSH	R2
             PUSH	R3
@@ -442,8 +446,8 @@ c_certa:    AND		R1,7h			;ficam os 3 bits menos significativos
             AND		R2,7h
             CMP		R1,R2
             BR.NZ	ciclo_ROR		;caso nao sejam iguais > ciclo_ROR para passar ao proximo algarismo
-            INC		R3				;caso sejam iguais incrementa contador respostas corretas
-            CALL	mais_nove		;alteramos os algarismos que eram iguais
+            INC		R3				;iguais -> incrementa contador
+            CALL	del_digito		;alteramos os algarismos que eram iguais
 ciclo_ROR:	MOV		R1,M[codigo_m]	;coloca a sequencia secreta no R1
             MOV		R2,M[tentativa_m];coloca a tentaiva no R2
             ROR		R1,3			;passa ao proximo algarismo
@@ -484,7 +488,7 @@ c_errada:	CMP		R5,4		;verifica se testou os 4 algarismos da sequencia secreta
           CMP		R1,R2
           BR.NZ	r_certo
           INC		R4			;se forem iguais aumentar o contador de respostas corretas
-          CALL	mais_nove	;alteramos os algarismos que eram iguais
+          CALL	del_digito	;alteramos os algarismos que eram iguais
 r_certo:	MOV		R1,M[codigo_m]	;coloca a sequencia secreta no R1
           ROR		R1,3		;roda para o proximo lagarismo
           MOV		M[codigo_m],R1	;coloca de volta na memoria
