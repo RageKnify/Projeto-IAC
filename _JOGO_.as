@@ -11,6 +11,7 @@ IO_DISPLAY1 		EQU 	FFF1h
 LCD_CURSOR			EQU		FFF4h
 LCD					EQU		FFF5h
 MASC				EQU		1000000000010110b
+LEDS				EQU 	FFF8h
 
 
 
@@ -25,22 +26,22 @@ codigo_m			WORD	0	;codigo modificavel
 loc_cursor			WORD	0	;localizaçao do cursor da janela de texto
 novo_jogo_			WORD	0	; variavel que define se se deve comecar um novo jogo
 cont_jogadas		WORD	0	;contador de jogadas == pont_act
-acertou				WORD	0	;se acertou esta a 1 
+acertou				WORD	0	;se acertou esta a 1
 perdeu_jogo			WORD	0	; 1 ou 0 consoante perdeu jogo ou nao
 apaga_led			WORD	0	;se for para apagae algum led esta a 1
 cron				WORD	0
 recorde				WORD	12
 contador    		WORD  	0
-certos				WORD	0	;contador de certos	
+certos				WORD	0	;contador de certos
 errados				WORD	0	;contador errados
 cruzes				WORD	0	;contador cruzes
 bolas				WORD	0	;contador bolas
 tracos				WORD	0	;contador traços
 
 VarStr_INICIO_JOGO	STR 	'Carregue no botao IA para iniciar@'
-STR_perdeu_jogo		STR		'Fim do jogo@'
+STR_perdeu_jogo		STR		'Fim do jogo. O codigo era: @'
 STR_recomecar		STR		'Carregue em IA para recomecar@'
-STR_ganhou			STR		'Parabens, teve sorte@'
+STR_ganhou			STR		'Parabens, acertou@'
 VarStr_recorde		STR 	'RECORDE --> @'
 
 
@@ -69,98 +70,72 @@ INTA		WORD	INTAF	; key A
 			MOV     SP,R7
 			MOV 	R7, INT_MASK
 			MOV 	M[INT_MASK_ADDR], R7
-			MOV		R7,FFFFh			
+			MOV		R7,FFFFh
 			MOV		M[IO_CURSOR],R7			;para se poder mecher no cursor
 			MOV		R7,R0
 			JMP		inicio
 
 
-	
+
 
 ;**********************************************************************************
 ;**************************INPUT**************************************
 
 
-				
+
 ;interrupcoes das teclas
 ;colocam na variavel da tentativa o novo digito
 INT1F:		PUSH	R1
 			MOV		R1,M[tentativa]
-			SHL		R1,4
+			SHL		R1,3
 			ADD		R1,1
 			MOV		M[tentativa],R1
 			POP		R1
-			RTI	
+			RTI
 INT2F:		PUSH	R1
 			MOV		R1,M[tentativa]
-			SHL		R1,4
+			SHL		R1,3
 			ADD		R1,2
 			MOV		M[tentativa],R1
 			POP		R1
-			RTI	
+			RTI
 INT3F:		PUSH	R1
 			MOV		R1,M[tentativa]
-			SHL		R1,4
+			SHL		R1,3
 			ADD		R1,3
 			MOV		M[tentativa],R1
 			POP		R1
-			RTI	
+			RTI
 INT4F:		PUSH	R1
 			MOV		R1,M[tentativa]
-			SHL		R1,4
+			SHL		R1,3
 			ADD		R1,4
 			MOV		M[tentativa],R1
 			POP		R1
-			RTI	
+			RTI
 INT5F:		PUSH	R1
 			MOV		R1,M[tentativa]
-			SHL		R1,4
+			SHL		R1,3
 			ADD		R1,5
 			MOV		M[tentativa],R1
 			POP		R1
-			RTI	
+			RTI
 INT6F:		PUSH	R1
 			MOV		R1,M[tentativa]
-			SHL		R1,4
+			SHL		R1,3
 			ADD		R1,6
 			MOV		M[tentativa],R1
 			POP		R1
-			RTI	
-			
+			RTI
+
 
 ;**********************************************************************************
-;*********************PERDEU JOGO***************************************	
+;*********************PERDEU JOGO***************************************
 INTAF:				PUSH	R1          ; coloca novo_jogo a 1 para que se recomece o jogo
 					MOV		R1,1
 					MOV		M[novo_jogo_],R1
 					POP		R1
-					RTI			
-				
-				
-;**********************************************************************************
-;*********************Codificar 16-> 12***************************************
-;nao devia ser feito push R0 e depois ser la guardada a variavel
-
-codi_12:	PUSH	R1
-			PUSH	R2
-			PUSH	R3
-			PUSH	R4
-			MOV		R1,M[SP+6]	;le o valor que queremos codificar
-c_codi:		MOV		R2,7h
-			AND		R2,R1		;fica com 3 bits
-			ADD		R3,R2		;adiciona ao resultado
-			ROR		R1,4
-			ROR		R3,3
-			INC		R4			;faz uma vez para cada digito
-			CMP		R4,4
-			BR.NZ	c_codi
-			ROR		R3,4
-			MOV		M[SP+6],R3	;coloca o valor na resposta
-			POP		R4
-			POP		R3
-			POP		R2
-			POP		R1
-			RET		
+					RTI
 
 
 ;**********************************************************************************
@@ -171,8 +146,8 @@ esc_linha_seg:	PUSH	R1
 				ADD		R1,100h
 				MOV		M[loc_cursor],R1
 				POP		R1
-				
-				
+
+
 passar_str:		PUSH	R1
 				PUSH	R2
 				PUSH	R3
@@ -183,7 +158,7 @@ escrever:		MOV 	R2, M[R1]		;mete caracter em R2
 				CMP		R2,FIM_STR
 				BR.Z	end_out
 				MOV		M[IO],R2		;mete caracter na janela
-				INC		R1				
+				INC		R1
 				INC		R3				;incrementa cursor
 				MOV		M[IO_CURSOR],R3
 				BR		escrever
@@ -193,12 +168,12 @@ end_out:		MOV		M[loc_cursor],R3	;guarda em variavel a localizaçao do cursor
 				POP		R1
 				RETN	1
 
-	
-			
-			
+
+
+
 ;***********************************************************************************
 ;********************************LEDS***********************************************
-INTFF:			PUSH	R1			
+INTFF:			PUSH	R1
 				MOV		R1,M[cron]
 				INC		R1
 				MOV		M[cron],R1
@@ -208,9 +183,9 @@ INTFF:			PUSH	R1
 				MOV		M[IO_TC],R1
 				POP		R1
 				RTI
-				
+
 apagar_led:		SHR		R1,1			;apaga um led
-				MOV		M[FFF8h],R1
+				MOV		M[LEDS],R1
 				MOV		R2,M[cron]
 				JMP		travao
 
@@ -219,21 +194,21 @@ ligar_leds:		PUSH	R1
 				PUSH	R2
 				PUSH	R3
 				MOV		R1,FFFFh		;R1 guarda os leds que estao acesos
-				MOV		M[FFF8h],R1
+				MOV		M[LEDS],R1
 				MOV		R2,M[cron]
-				
+
 travao:			MOV		R3,M[tentativa]
-				AND		R3,F000h			;se a tentativa ja tiver 4 digitos sai
+				AND		R3,0E00h			;se a tentativa ja tiver 4 digitos sai
 				CMP		R3,0
 				BR.NZ	sai
 				CMP		R1,0
-				JMP.Z	todos_apagados		;se os leds tiverem todos apagados 
+				JMP.Z	todos_apagados		;se os leds tiverem todos apagados
 				CMP		M[cron],R2
 				JMP.NZ	apagar_led
 				JMP		travao
-				
-				
-sai:			MOV		M[FFF8h],R0;quando sai apaga os leds todos
+
+
+sai:			MOV		M[LEDS],R0;quando sai apaga os leds todos
 				POP		R3
 				POP		R2
 				POP		R1
@@ -244,11 +219,11 @@ todos_apagados:	MOV		R1,1			;se tiverem apagado todos perdeu jogo
 				POP		R3
 				POP		R2
 				POP		R1
-				RET		
-				
-			
-			
-			
+				RET
+
+
+
+
 ;***********************************************************************************
 ;********************************limpar a janela de texto******************
 
@@ -276,51 +251,52 @@ fim_limpar:		MOV		M[loc_cursor],R0
 				POP		R2
 				POP		R1
 				RET
-				
+
 ;***********************************************************************************
 ;***************************CODIGO SECRETO******************************************
 
 
 random:     PUSH	R1			; gera o numero dos jogos
-       			PUSH	R2
-       			PUSH	R3
-       			PUSH	R4
-       			PUSH	R5
-       			MOV		R1,M[codigo]; verifica se ja existe um codigo
-       			CMP		R1,0
-       			BR.NZ	E_PAR		;se houver aplica a funcao fornecida
-       			MOV		R1,M[contador]	;se nao houver utiliza o segundo atual
+			PUSH	R2
+			PUSH	R3
+			PUSH	R4
+			PUSH	R5
+			MOV		R1,M[codigo]; verifica se ja existe um codigo
+			CMP		R1,0
+			BR.NZ	E_PAR		;se houver aplica a funcao fornecida
+			MOV		R1,M[contador]	;se nao houver utiliza o segundo atual
 E_PAR:		MOV		R2,R1
-       			AND		R2,1h		;ve se o N0 e par
-       			CMP		R2,0
-       			BR.Z    ran_p
-       			BR      ran_i
+       		AND		R2,1h		;ve se o N0 e par
+       		CMP		R2,0
+       		BR.Z    ran_p
+       		BR      ran_i
 ran_p:		ROR     R1,1
-       			BR      ran_ambos
+       		BR      ran_ambos
 ran_i:  	XOR     R1,MASC
-               	ROR     R1,1
+            ROR     R1,1
 ran_ambos: 	MOV		R3,0		;vai dividir por 6 e somar 1 a cada digito para que os digitos estejam entre 1 e 6
-       			MOV		R4,0
+       		MOV		R4,0
 c_div6:		MOV		R2,Fh
-       			AND		R2,R1
-       			MOV		R5,6
-       			DIV		R2,R5
-       			INC		R5
-       			ADD		R3,R5
-       			ROR		R3,4
-       			ROR		R1,4
-       			INC		R4
-       			CMP		R4,4
-       			BR.NZ	c_div6
-       			MOV		M[codigo],R3	;guarda o novo codigo na memoria
-       			POP		R5
-       			POP		R4
-       			POP		R3
-       			POP		R2
-       			POP		R1
-       			RET
+   			AND		R2,R1
+   			MOV		R5,6
+   			DIV		R2,R5
+   			INC		R5
+   			ADD		R3,R5
+   			ROR		R3,3
+   			ROR		R1,4
+   			INC		R4
+   			CMP		R4,4
+   			BR.NZ	c_div6
+			ROR		R3,4
+   			MOV		M[codigo],R3	;guarda o novo codigo na memoria
+   			POP		R5
+   			POP		R4
+   			POP		R3
+   			POP		R2
+   			POP		R1
+   			RET
 
-				
+
 ;***********************************************************************************
 ;ciclo que escreve caracter a frente
 esc_frent:  PUSH	R1
@@ -333,7 +309,7 @@ esc_frent:  PUSH	R1
             MOV	    M[loc_cursor],R1
             POP	    R1
             RETN	1
-;**********************************************************************************			
+;**********************************************************************************
 output: 	PUSH	R1
 			PUSH	R2
 			PUSH	R3
@@ -450,7 +426,7 @@ mais_nove:	PUSH	R1				;guardar R1(contador de ciclos_ROR), funçao estraga-o
             MOV		M[tentativa_m],R1
             POP		R1				;reavem o R1
             RET
-		
+
 
 p_certa:    PUSH	R1
             PUSH	R2
@@ -485,7 +461,7 @@ ciclo_ROR:	MOV		R1,M[codigo_m]	;coloca a sequencia secreta no R1
             POP		R2
             POP		R1
             RET
-			
+
 
 p_errada:	PUSH	R1
           PUSH	R2
@@ -533,11 +509,11 @@ r_t_:	    MOV		R2,M[tentativa_m];colocar a tentativa em R2
           MOV		R5,R0			;reiniciar contador de rotacoes da sequencia
           JMP		c_errada		;testar com o novo algarismo da tentativa
 
-	
+
 ;***********************************************************************************
 
-		
-		
+
+
 wrt_7seg:PUSH	R1
 		PUSH	R2
 		PUSH	R3
@@ -568,10 +544,10 @@ c_tents:	PUSH	R1
 			POP		R1
 			CALL	p_certa		;verificar se ha algum algarismo na posicao certa
 			CALL	p_errada	;verificar se ha algum algarismo na posicao certa
-			CALL	atua_R3		;codifica R3 
+			CALL	atua_R3		;codifica R3
 			CALL	output		;escreve o output na janela de texto
 			PUSH	R1
-			MOV		R1,M[acertou]	
+			MOV		R1,M[acertou]
 			CMP		R1,1		;se tiver acertado nesta tentativa acaba o jogo
 			JMP.Z	acertou_tent		;E PRECISO MUDAR PARA COMECAR UM NOVO JOGO
 			MOV		R1,M[cont_jogadas]
@@ -580,14 +556,14 @@ c_tents:	PUSH	R1
 			MOV		M[cont_jogadas],R1
 acertou_tent:POP		R1
 			RET
-	
+
 esgotou_tent:MOV	R1,1
 			MOV		M[perdeu_jogo],R1
 			POP		R1
 			RET
-			
+
 ;meter contador de jogadas a zero
-;se nao perdeu o jogo queremos continuar a jogar				
+;se nao perdeu o jogo queremos continuar a jogar
 ;se acertou queremos recomeçar
 ;***********************************************************************************
 ;****************************highscore**********************************************
@@ -610,10 +586,10 @@ C_escrita: 	MOV 	R2, M[R1]
 			INC		R3
 			MOV		M[LCD_CURSOR],R3
 			INC 	R1
-			MOV		R4, FIM_STR 
+			MOV		R4, FIM_STR
 			CMP		M[R1], R4
 			BR.NZ	C_escrita
-			
+
 			MOV		R4,R3
 			MOV		R1,M[recorde]
 			MOV		R2,10
@@ -634,20 +610,19 @@ C_escrita: 	MOV 	R2, M[R1]
 			ADD		R3,48
 			MOV		M[LCD_CURSOR],R4
 			MOV		M[LCD],R3
-					
+
 fim_hsc:	POP		R4
 			POP		R3
 			POP		R2
 			POP		R1
 			RET
-				
-				
 
-				
-;***********************************************************************************				
-;***********************************************************************************	
-ganhou:				POP		R1
-					MOV		M[acertou],R0
+
+
+
+;***********************************************************************************
+;***********************************************************************************
+ganhou:				MOV		M[acertou],R0
 					PUSH	R1
 					MOV		R1,STR_ganhou
 					PUSH	R1
@@ -657,46 +632,54 @@ ganhou:				POP		R1
 					CALL	esc_linha_seg
 					POP		R1
 					CALL	esc_hsc
+					MOV		M[novo_jogo_],R0
 					JMP		novo_jogo
 
-perdeu:				POP		R1
-					MOV		M[perdeu_jogo],R0	;reinicia variavel
+perdeu:				MOV		M[perdeu_jogo],R0	;reinicia variavel
 					PUSH	R1
+					PUSH	R2
+					PUSH	R3
+					PUSH	R4
 					MOV		R1,STR_perdeu_jogo	;escreve que perdeu
 					PUSH	R1					;o ciclo remove este PUSH
 					CALL	passar_str
+					MOV     R3,0
+					MOV     R2,M[codigo]
+					ROL		R2,4
+ciclo_codigo:		ROL		R2,3
+					MOV     R1,7h
+					AND		R1,R2
+					ADD     R1,48
+					PUSH	R1
+					CALL	esc_frent
+					INC		R3
+					CMP		R3,4
+					BR.NZ	ciclo_codigo
 					MOV		R1,STR_recomecar
 					PUSH	R1						;escreve para reiniciar
 					CALL	esc_linha_seg
-					;MOV		R1,12
-					;MOV		M[cont_jogadas],R1
-					;CALL	esc_hsc
-					MOV		M[novo_jogo],R0
+					MOV		M[novo_jogo_],R0
+					POP		R4
+					POP		R3
+					POP		R2
 					POP		R1
 
-novo_jogo:			PUSH  R1
-					MOV  R1,M[contador]
-					INC  R1
-					MOV  M[contador],R1
-					POP  R1
+novo_jogo:			PUSH  	R1
+					MOV  	R1,M[contador]
+					INC  	R1
+					MOV  	M[contador],R1
+					POP		R1
 					CMP		M[novo_jogo_],R0		;enquanto nao carregar em IA nao começa
 					BR.Z	novo_jogo
 					MOV		M[cont_jogadas],R0		;limpa contadores
-					MOV		M[perdeu],R0
+					MOV		M[perdeu_jogo],R0
 					MOV		M[acertou],R0
 					MOV		M[novo_jogo_],R0
 					CALL	random
-					PUSH    R1
-					MOV     R1,M[codigo]     ; passa o codigo para 12 bits e escree-o de volta na memoria
-					PUSH    R1
-					CALL    codi_12			; escreve codigo modificado no push de cima
-					POP     R1				;reavem codigo modificado
-					MOV     M[codigo],R1
-					POP     R1		
 					CALL	limpar_janela
 nova_tentat:		MOV		M[tentativa],R0
-					PUSH		R1
-					MOV		R3,0;*********************************limpar a codificaçao de R3
+					PUSH	R1
+					MOV		R3,0
 					MOV		R1,M[cont_jogadas]
 					INC		R1
 					MOV		M[cont_jogadas],R1
@@ -706,15 +689,8 @@ nova_tentat:		MOV		M[tentativa],R0
 					PUSH	R1
 					MOV		R1,M[perdeu_jogo]
 					CMP		R1,R0				;se perdeu o jogo nao chama ciclo das tentativas faz logo novo jogo
-					JMP.NZ	perdeu
 					POP		R1
-					PUSH    R1
-					MOV     R1,M[tentativa]     ; passa o codigo para 12 bits e escree-o de volta na memoria
-					PUSH    R1
-					CALL    codi_12
-					POP     R1
-					MOV     M[tentativa],R1
-					POP     R1
+					JMP.NZ	perdeu
 					CALL	c_tents
 					PUSH	R1
 					MOV		R1,M[acertou]		;caso tenha acertado reinicia
@@ -722,11 +698,11 @@ nova_tentat:		MOV		M[tentativa],R0
 					JMP.NZ	ganhou
 					MOV		R1,M[perdeu_jogo]	;caso tenha perdido o jogo reinicia
 					CMP		R1,0
-					JMP.NZ	perdeu				
+					JMP.NZ	perdeu
 					POP		R1
 					JMP		nova_tentat
-				
-	
+
+
 ;**********************************inicio*******************************************
 inicio:			PUSH	VarStr_INICIO_JOGO
 				CALL	passar_str
@@ -739,13 +715,13 @@ inicio:			PUSH	VarStr_INICIO_JOGO
 				ENI
 				MOV		M[novo_jogo_],R0
 				CALL	novo_jogo
-				
-				
-				
-;***********************************************************************************	
-;***********************************************************************************	
+
+
+
+;***********************************************************************************
+;***********************************************************************************
 ;7 segmentos chamar no inicio da jogada antes input (leds)
 ;quando acaba jogo atualizar highscore
 ;cicli esc coluna seg escreve primeiro e depois aumenta
-							
+
 fim:			BR		fim
