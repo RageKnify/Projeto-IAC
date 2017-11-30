@@ -42,8 +42,10 @@ STR_ganhou			STR		'Parabens, acertou@'
 VarStr_recorde		STR 	'RECORDE --> @'
 
 
-;*************************************************************************************
-;**************************INTERRUPÇOES*********************************************
+;******************************************************************************
+;*                               INTERRUPÇOES                                 *
+;******************************************************************************
+
 			ORIG	FE01h
 INT1		WORD	INT1F
 INT2		WORD	INT2F
@@ -59,25 +61,9 @@ INTF		WORD 	INTFF
 INTA		WORD	INTAF
 
 
-
-
 ;******************************************************************************
-;*                                 CODIGO                                     *
+;                          Ciclos das interrupcoes                            *
 ;******************************************************************************
-
-			ORIG	0000h
-			MOV     R7,SP_INICIAL
-			MOV     SP,R7
-			MOV 	R7, INT_MASK
-			MOV 	M[INT_MASK_ADDR], R7
-			MOV		R7,FFFFh
-			MOV		M[IO_CURSOR],R7			;para ativar o cursor
-			MOV		R7,R0
-			JMP		inicio
-
-;******************************************************************************
-;**************************INPUT**************************************
-
 
 
 ;interrupcoes das teclas
@@ -132,9 +118,38 @@ INTAF:			PUSH	R1
 				POP		R1
 				RTI
 
+;interrupcao do cronometro, aumenta cronometro de 0,5 em 0,5 segundos
+INTFF:			PUSH	R1
+				MOV		R1,M[cron]
+				INC		R1
+				MOV		M[cron],R1
+				MOV		R1,5
+				MOV		M[IO_TEMP],R1
+				MOV		R1,1
+				MOV		M[IO_TC],R1
+				POP		R1
+				RTI
 
-;**********************************************************************************
-;*******************************ciclo que escreve string na janela*****************
+
+
+
+;******************************************************************************
+;*                                 CODIGO                                     *
+;******************************************************************************
+
+			ORIG	0000h
+			MOV     R7,SP_INICIAL
+			MOV     SP,R7
+			MOV 	R7, INT_MASK
+			MOV 	M[INT_MASK_ADDR], R7
+			MOV		R7,FFFFh
+			MOV		M[IO_CURSOR],R7			;para ativar o cursor
+			MOV		R7,R0
+			JMP		inicio
+
+;******************************************************************************
+;*                        Ciclo que escreve string na janela                  *
+;******************************************************************************
 
 ;mete cursor na linha seguinte na primeira coluna
 esc_linha_seg:	PUSH	R1
@@ -165,89 +180,9 @@ end_out:		MOV		M[loc_cursor],R3;guarda a localizaçao do cursor
 				POP		R1
 				RETN	1
 
-;******************************************************************************
-;********************************LEDS******************************************
-;******************************************************************************
-
-;interrupcao do cronometro, aumenta cronometro de 0,5 em 0,5 segundos
-INTFF:			PUSH	R1
-				MOV		R1,M[cron]
-				INC		R1
-				MOV		M[cron],R1
-				MOV		R1,5
-				MOV		M[IO_TEMP],R1
-				MOV		R1,1
-				MOV		M[IO_TC],R1
-				POP		R1
-				RTI
-
-
-;liga os leds, e apaga-os enquanto nao se tiver acabado de jogar
-receber_tent:	PUSH	R1
-				PUSH	R2
-				PUSH	R3
-				MOV		R1,FFFFh	;R1 guarda os leds que estao acesos
-				MOV		M[LEDS],R1
-				MOV		R2,M[cron]
-
-travao:			MOV		R3,M[tentativa]
-				AND		R3,0E00h	;se a tentativa ja tiver 4 digitos sai
-				CMP		R3,0
-				JMP.NZ	jogou
-				CMP		R1,0
-				JMP.Z	todos_apagados	;se os leds tiverem todos apagados
-				CMP		M[cron],R2
-				JMP.Z	travao		;se ainda nao passou um segundo repete
-
-;apaga o Led mais a esquerda dos que estao acesos
-apagar_led:		SHR		R1,1
-				MOV		M[LEDS],R1
-				MOV		R2,M[cron]
-				JMP		travao
-
-jogou:			MOV		M[LEDS],R0;quando sai apaga os leds todos
-				POP		R3
-				POP		R2
-				POP		R1
-				RET
-
-todos_apagados:	MOV		R1,1			;se tiverem apagado todos perdeu jogo
-				MOV		M[perdeu_jogo],R1
-				POP		R3
-				POP		R2
-				POP		R1
-				RET
-
 ;***********************************************************************************
-;********************************limpar a janela de texto******************
-
-;escreve ' ' em todos os espacos da janela
-limpar_janela:	PUSH	R1
-				PUSH	R2
-				MOV		R1,R0
-cicle:			MOV		M[IO_CURSOR],R1
-				MOV		R2,' '
-				MOV		M[IO],R2
-				INC		R1
-				MOV		R2,R1
-				AND		R2,FFh
-				CMP		R2,79
-				BR.NZ	cicle
-				SUB		R1,79
-				ADD		R1,100h
-				ROR		R1,8
-				CMP		R1,24
-				BR.Z	fim_limpar
-				ROL		R1,8
-				BR		cicle
-fim_limpar:		MOV		M[loc_cursor],R0	;poe o cursor de volta no 0
-				MOV		M[IO_CURSOR],R0
-				POP		R2
-				POP		R1
-				RET
-
+;*                                CODIGO SECRETO                                   *
 ;***********************************************************************************
-;***************************CODIGO SECRETO******************************************
 
 ;gerador do codigo
 random:     PUSH	R1
@@ -290,9 +225,239 @@ c_div6:		MOV		R2,Fh
    			POP		R1
    			RET
 
+;***********************************************************************************
+;*                            Limpar a janela de texto                             *
+;***********************************************************************************
+
+;escreve ' ' em todos os espacos da janela
+limpar_janela:	PUSH	R1
+				PUSH	R2
+				MOV		R1,R0
+cicle:			MOV		M[IO_CURSOR],R1
+				MOV		R2,' '
+				MOV		M[IO],R2
+				INC		R1
+				MOV		R2,R1
+				AND		R2,FFh
+				CMP		R2,79
+				BR.NZ	cicle
+				SUB		R1,79
+				ADD		R1,100h
+				ROR		R1,8
+				CMP		R1,24
+				BR.Z	fim_limpar
+				ROL		R1,8
+				BR		cicle
+fim_limpar:		MOV		M[loc_cursor],R0	;poe o cursor de volta no 0
+				MOV		M[IO_CURSOR],R0
+				POP		R2
+				POP		R1
+				RET
 
 ;***********************************************************************************
-;ciclo que escreve caracter a frente
+;*                 Escreve a jogada atual no display de 7 segmentos                *
+;***********************************************************************************
+
+;funcao que escreve o numero da jogada atual no ecra de 7 segmentos
+wrt_7seg:	PUSH	R1
+			PUSH	R2
+			PUSH	R3
+			MOV		R1,M[cont_jogadas]
+			MOV		R2,10
+			DIV		R1,R2
+			MOV		R3,R2
+			ROR		R3,4
+			MOV		R2,10
+			DIV		R1,R2
+			ADD		R3,R2
+			ROR		R3,12
+			MOV		M[IO_DISPLAY0],R3
+			ROR		R3,4
+			MOV		M[IO_DISPLAY1],R3
+			POP		R3
+			POP		R2
+			POP		R1
+			RET
+
+;******************************************************************************
+;*                              Receber tentativa                             *
+;******************************************************************************
+
+;liga os leds, e apaga-os enquanto nao se tiver acabado de jogar
+receber_tent:	PUSH	R1
+				PUSH	R2
+				PUSH	R3
+				MOV		R1,FFFFh	;R1 guarda os leds que estao acesos
+				MOV		M[LEDS],R1
+				MOV		R2,M[cron]
+
+travao:			MOV		R3,M[tentativa]
+				AND		R3,0E00h	;se a tentativa ja tiver 4 digitos sai
+				CMP		R3,0
+				JMP.NZ	jogou
+				CMP		R1,0
+				JMP.Z	todos_apagados	;se os leds tiverem todos apagados
+				CMP		M[cron],R2
+				JMP.Z	travao		;se ainda nao passou um segundo repete
+
+;apaga o Led mais a esquerda dos que estao acesos
+apagar_led:		SHR		R1,1
+				MOV		M[LEDS],R1
+				MOV		R2,M[cron]
+				JMP		travao
+
+jogou:			MOV		M[LEDS],R0;quando sai apaga os leds todos
+				POP		R3
+				POP		R2
+				POP		R1
+				RET
+
+todos_apagados:	MOV		R1,1			;se tiverem apagado todos perdeu jogo
+				MOV		M[perdeu_jogo],R1
+				POP		R3
+				POP		R2
+				POP		R1
+				RET
+
+;***********************************************************************************
+;*                   Ciclo que verifica digitos na posicao certa                   *
+;***********************************************************************************
+
+;verifica quantos algarismos ha na posicao certa
+p_certa:    PUSH	R1
+            PUSH	R2
+            PUSH	R3
+            PUSH	R4
+            MOV		R4,R0
+            MOV		R3,R0
+            MOV		R2,M[tentativa_m]
+            MOV		R1,M[codigo_m]
+c_certa:    AND		R1,7h			;ficam os 3 bits menos significativos
+            AND		R2,7h
+            CMP		R1,R2
+            BR.NZ	pro_digito		;diferentes -> proximo algarismo
+            INC		R3				;iguais -> incrementa contador
+            CALL	del_digito		;altera digitos
+;roda o codigo e a tentativa para o proximo algarismo
+pro_digito:	MOV		R1,M[codigo_m]
+            MOV		R2,M[tentativa_m]
+            ROR		R1,3
+            ROR		R2,3
+            MOV		M[codigo_m],R1	;coloca de volta na memoria
+            MOV		M[tentativa_m],R2
+            INC		R4				;incrementa contador de rotacoes
+            CMP		R4,4			;se tiver verificado os 4 sai
+            JMP.NZ	c_certa
+;roda os ultimos 4 bits(estao vazios pois usamos 12)
+            ROR		R1,4
+            MOV		M[codigo_m],R1
+            ROR		R2,4
+            MOV		M[tentativa_m],R2
+            MOV		M[certos],R3	;guarda o numero de 'x's
+            POP		R4
+            POP		R3
+            POP		R2
+            POP		R1
+            RET
+				
+;***********************************************************************************
+;*                   Ciclo que verifica digitos na posicao errada                  *
+;***********************************************************************************
+
+;verifica quantos algarismos ha na posicao errada
+p_errada:	PUSH	R1
+			PUSH	R2
+			PUSH	R3
+			PUSH	R4
+			PUSH	R5
+			MOV		R3,R0
+			MOV		R4,R0
+			MOV		R5,R0
+;ve se ja estou este digito da tentativa para os 4 do codigo
+c_errada:	CMP		R5,4
+			JMP.Z	r_tenta		;se sim passar ao proximo algarismo da tentativa
+			MOV		R1,M[codigo_m]
+			MOV		R2,M[tentativa_m]
+			AND		R1,7h		;ficam os 3 bits menos significativos
+			AND		R2,7h
+			CMP		R1,0h		;verifica se o algarismo e 0
+			BR.Z	r_codigo		;se for == 0 -> proximo digito
+			CMP		R1,R2
+			BR.NZ	r_codigo		;diferentes -> proximo digito
+			INC		R4			;iguais -> incrementa contador
+			CALL	del_digito	;altera digitos
+;roda o codigo para o proximo algarismo
+r_codigo:	MOV		R1,M[codigo_m]
+			ROR		R1,3
+			MOV		M[codigo_m],R1	;coloca de volta na memoria
+			INC		R5			;incrementar contador de rotacoes da sequencia
+			JMP		c_errada	;testar com o novo algarismo da sequencia
+
+;roda a tentativa para o proximo algarismo
+r_tenta:	ROR		R1,4
+			MOV   	M[codigo_m],R1
+			CMP		R3,4		;verifica se testou os 4 algarismos da tentativa
+			BR.Z	f_errada
+;se nao tiver roda
+            MOV		R2,M[tentativa_m]
+			ROR		R2,3
+			MOV		M[tentativa_m],R2	;colocar de volta na memoria
+			INC		R3					;incrementa contador de rotacoes
+			MOV		R5,R0				;reinicia contador de rotacoes da sequencia
+			JMP		c_errada			;testar com o novo algarismo da tentativa
+;se tiver acaba
+f_errada:   ROR   	R2,4
+			MOV   	M[tentativa_m],R2
+			MOV		M[errados],R4
+			POP		R5
+			POP		R4
+			POP		R3
+			POP		R2
+			POP		R1
+			RET
+
+;***********************************************************************************
+;*                             Ciclo que codifica R3                               *
+;***********************************************************************************
+
+;codifica o R3, R3 fica com 0x0oh
+;onde 'x' e o numero de certas e 'o' e o numero de erradas
+atua_R3:	PUSH	R1
+          	PUSH	R2
+          	MOV		R3,0
+Conta_x:  	MOV		R1,M[certos]	;retira o numero de algarismos na posicao certa
+          	MOV		R2,0
+Ciclo_x:  	CMP		R2,R1
+          	BR.Z	Conta_o
+          	ADD		R3,1
+          	INC   	R2
+          	BR    	Ciclo_x
+Conta_o:  	SHL   	R3,8
+          	MOV   	R1,M[errados]	;retira o numero de numeros na posicao errada
+          	MOV   	R2,0
+Ciclo_o:  	CMP   	R2,R1
+          	BR.Z	f_atua_R3
+          	ADD		R3,1
+          	INC  	R2
+          	BR    	Ciclo_o
+f_atua_R3:	POP		R2
+          	POP		R1
+          	RET
+
+;destroi o digito atual da verificacao para nao ser contado mais do que uma vez
+del_digito:	PUSH	R1
+            MOV		R1,M[codigo_m]	;del_digito > poe na posiçao um algarismo incompativel
+            AND		R1,FFF8h		;passa o algarismo para 0 para nao ser 'x' e 'o'
+            MOV		M[codigo_m],R1
+            MOV		R1,M[tentativa_m]
+            AND		R1,FFF8h		;passa o algarismo para 0 para nao ser 'x' e 'o'
+            MOV		M[tentativa_m],R1
+            POP		R1
+            RET
+
+;***********************************************************************************
+;*                       Ciclo que escreve caracter a frente                       *
+;***********************************************************************************
 esc_frent:  PUSH	R1
             MOV	    R1,M[loc_cursor]
             MOV	    M[IO_CURSOR],R1
@@ -304,7 +469,9 @@ esc_frent:  PUSH	R1
             POP	    R1
             RETN	1
 
-;**********************************************************************************
+;***********************************************************************************
+;*                      Ciclo que escreve resultado da tentativa                   *
+;***********************************************************************************
 
 ;output resultante da jogada
 output: 	PUSH	R1
@@ -396,157 +563,9 @@ fim_out:	MOV		R1,M[loc_cursor] ;no fim do output deixa o cursor na linha seguint
 			POP		R1
 			RET
 
-;*****************************************************************************
-
-;codifica o R3, R3 fica com 0x0oh
-;onde 'x' e o numero de certas e 'o' e o numero de erradas
-atua_R3:	PUSH	R1
-          	PUSH	R2
-          	MOV		R3,0
-Conta_x:  	MOV		R1,M[certos]	;retira o numero de algarismos na posicao certa
-          	MOV		R2,0
-Ciclo_x:  	CMP		R2,R1
-          	BR.Z	Conta_o
-          	ADD		R3,1
-          	INC   	R2
-          	BR    	Ciclo_x
-Conta_o:  	SHL   	R3,8
-          	MOV   	R1,M[errados]	;retira o numero de numeros na posicao errada
-          	MOV   	R2,0
-Ciclo_o:  	CMP   	R2,R1
-          	BR.Z	f_atua_R3
-          	ADD		R3,1
-          	INC  	R2
-          	BR    	Ciclo_o
-f_atua_R3:	POP		R2
-          	POP		R1
-          	RET
-
-;destroi o digito atual da verificacao para nao ser contado mais do que uma vez
-del_digito:	PUSH	R1
-            MOV		R1,M[codigo_m]	;del_digito > poe na posiçao um algarismo incompativel
-            AND		R1,FFF8h		;passa o algarismo para 0 para nao ser 'x' e 'o'
-            MOV		M[codigo_m],R1
-            MOV		R1,M[tentativa_m]
-            AND		R1,FFF8h		;passa o algarismo para 0 para nao ser 'x' e 'o'
-            MOV		M[tentativa_m],R1
-            POP		R1
-            RET
-
-;verifica quantos algarismos ha na posicao certa
-p_certa:    PUSH	R1
-            PUSH	R2
-            PUSH	R3
-            PUSH	R4
-            MOV		R4,R0
-            MOV		R3,R0
-            MOV		R2,M[tentativa_m]
-            MOV		R1,M[codigo_m]
-c_certa:    AND		R1,7h			;ficam os 3 bits menos significativos
-            AND		R2,7h
-            CMP		R1,R2
-            BR.NZ	pro_digito		;diferentes -> proximo algarismo
-            INC		R3				;iguais -> incrementa contador
-            CALL	del_digito		;altera digitos
-;roda o codigo e a tentativa para o proximo algarismo
-pro_digito:	MOV		R1,M[codigo_m]
-            MOV		R2,M[tentativa_m]
-            ROR		R1,3
-            ROR		R2,3
-            MOV		M[codigo_m],R1	;coloca de volta na memoria
-            MOV		M[tentativa_m],R2
-            INC		R4				;incrementa contador de rotacoes
-            CMP		R4,4			;se tiver verificado os 4 sai
-            JMP.NZ	c_certa
-;roda os ultimos 4 bits(estao vazios pois usamos 12)
-            ROR		R1,4
-            MOV		M[codigo_m],R1
-            ROR		R2,4
-            MOV		M[tentativa_m],R2
-            MOV		M[certos],R3	;guarda o numero de 'x's
-            POP		R4
-            POP		R3
-            POP		R2
-            POP		R1
-            RET
-
-;verifica quantos algarismos ha na posicao errada
-p_errada:	PUSH	R1
-			PUSH	R2
-			PUSH	R3
-			PUSH	R4
-			PUSH	R5
-			MOV		R3,R0
-			MOV		R4,R0
-			MOV		R5,R0
-;ve se ja estou este digito da tentativa para os 4 do codigo
-c_errada:	CMP		R5,4
-			JMP.Z	r_tenta		;se sim passar ao proximo algarismo da tentativa
-			MOV		R1,M[codigo_m]
-			MOV		R2,M[tentativa_m]
-			AND		R1,7h		;ficam os 3 bits menos significativos
-			AND		R2,7h
-			CMP		R1,0h		;verifica se o algarismo e 0
-			BR.Z	r_codigo		;se for == 0 -> proximo digito
-			CMP		R1,R2
-			BR.NZ	r_codigo		;diferentes -> proximo digito
-			INC		R4			;iguais -> incrementa contador
-			CALL	del_digito	;altera digitos
-;roda o codigo para o proximo algarismo
-r_codigo:	MOV		R1,M[codigo_m]
-			ROR		R1,3
-			MOV		M[codigo_m],R1	;coloca de volta na memoria
-			INC		R5			;incrementar contador de rotacoes da sequencia
-			JMP		c_errada	;testar com o novo algarismo da sequencia
-
-;roda a tentativa para o proximo algarismo
-r_tenta:	ROR		R1,4
-			MOV   	M[codigo_m],R1
-			CMP		R3,4		;verifica se testou os 4 algarismos da tentativa
-			BR.Z	f_errada
-;se nao tiver roda
-            MOV		R2,M[tentativa_m]
-			ROR		R2,3
-			MOV		M[tentativa_m],R2	;colocar de volta na memoria
-			INC		R3					;incrementa contador de rotacoes
-			MOV		R5,R0				;reinicia contador de rotacoes da sequencia
-			JMP		c_errada			;testar com o novo algarismo da tentativa
-;se tiver acaba
-f_errada:   ROR   	R2,4
-			MOV   	M[tentativa_m],R2
-			MOV		M[errados],R4
-			POP		R5
-			POP		R4
-			POP		R3
-			POP		R2
-			POP		R1
-			RET
-
-;******************************************************************************
-
-
-;funcao que escreve o numero da jogada atual no ecra de 7 segmentos
-wrt_7seg:	PUSH	R1
-			PUSH	R2
-			PUSH	R3
-			MOV		R1,M[cont_jogadas]
-			MOV		R2,10
-			DIV		R1,R2
-			MOV		R3,R2
-			ROR		R3,4
-			MOV		R2,10
-			DIV		R1,R2
-			ADD		R3,R2
-			ROR		R3,12
-			MOV		M[IO_DISPLAY0],R3
-			ROR		R3,4
-			MOV		M[IO_DISPLAY1],R3
-			POP		R3
-			POP		R2
-			POP		R1
-			RET
-
-;******************************************************************************
+;***********************************************************************************
+;*                        Ciclo que avalia tentativa                               *
+;***********************************************************************************
 
 ;funcao que trata da tentativa
 c_tents:		PUSH	R1
@@ -575,8 +594,9 @@ esgotou_tent:	MOV		R1,1
 				POP		R1
 				RET
 
-;******************************************************************************
-;****************************highscore*****************************************
+;***********************************************************************************
+;**                                 Recorde                                        *
+;***********************************************************************************
 
 ;funcao que escreve o highscore no LCD
 esc_hsc:	PUSH	R1
@@ -632,8 +652,9 @@ C_escrita: 	MOV 	R2, M[R1]
 
 
 
-;*******************************************************************************
-;*******************************************************************************
+;***********************************************************************************
+;*                              Ciclos de motor de jogo                            *
+;***********************************************************************************
 
 ;funcao de final de jogo com vitoria, escreve que ganhou, para premir o IA
 ;e atuliza o highscore
@@ -724,7 +745,9 @@ nova_tentat:	MOV		M[tentativa],R0
 				POP		R1
 				JMP		nova_tentat
 
-;**********************************inicio**************************************
+;***********************************************************************************
+;*                                Inicio                                           *
+;***********************************************************************************
 
 ;inicio do programa, diz para premir o IA, comeca o cronometro e comeca um jogo
 inicio:			PUSH	VarStr_INICIO_JOGO
