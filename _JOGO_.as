@@ -522,7 +522,7 @@ f_errada:   ROR   	R2,4
 			POP		R1
 			RET
 
-;***********************************************************************************
+;******************************************************************************
 
 
 ;funcao que escreve o numero da jogada atual no ecra de 7 segmentos
@@ -546,7 +546,7 @@ wrt_7seg:	PUSH	R1
 			POP		R1
 			RET
 
-;***********************************************************************************
+;******************************************************************************
 
 ;funcao que trata da tentativa
 c_tents:		PUSH	R1
@@ -557,40 +557,40 @@ c_tents:		PUSH	R1
 				POP		R1
 				CALL	p_certa		;verificar se ha algum algarismo na posicao certa
 				CALL	p_errada	;verificar se ha algum algarismo na posicao certa
-				CALL	atua_R3		;codifica R3
+				CALL	atua_R3		;codifica R3 com o numero de 'x's e 'o's
 				CALL	output		;escreve o output na janela de texto
 				PUSH	R1
 				MOV		R1,M[acertou]
-				CMP		R1,1		;se tiver acertado nesta tentativa acaba o jogo
-				JMP.Z	acertou_tent		;E PRECISO MUDAR PARA COMECAR UM NOVO JOGO
+				CMP		R1,1		;se tiver acertado nao contamos a tentativa
+				JMP.Z	acertou_tent
 				MOV		R1,M[cont_jogadas]
-				CMP		R1,12	; ve se ja foram feitas 12 jogadas
-				JMP.Z	esgotou_tent	; se sim acaba jogo
+				CMP		R1,12		; ve se ja foram feitas 12 jogadas
+				JMP.Z	esgotou_tent; se sim vai ativar a variavel
 				MOV		M[cont_jogadas],R1
 acertou_tent:	POP		R1
 				RET
 
-esgotou_tent:MOV	R1,1
-			MOV		M[perdeu_jogo],R1
-			POP		R1
-			RET
+esgotou_tent:	MOV		R1,1
+				MOV		M[perdeu_jogo],R1
+				POP		R1
+				RET
 
-;meter contador de jogadas a zero
-;se nao perdeu o jogo queremos continuar a jogar
-;se acertou queremos recomeçar
-;***********************************************************************************
-;****************************highscore**********************************************
+;******************************************************************************
+;****************************highscore*****************************************
 
+;funcao que escreve o highscore no LCD
 esc_hsc:	PUSH	R1
 			PUSH	R2
 			PUSH	R3
-			PUSH	R4;************comparar para ver se é maior, se nao for fim_hsc
+			PUSH	R4
 			MOV		R1,M[cont_jogadas]
 			MOV		R2,M[recorde]
 			CMP		R1,R2
 			JMP.NN	High
+;se o numero de jogadas deste jogo for menor atualizar o highscore
 			MOV		R1,M[cont_jogadas]
 			MOV		M[recorde],R1
+;escrever o texto do highscore
 High:		MOV		R1, VarStr_recorde
 			MOV		R3,8000h
 			MOV		M[LCD_CURSOR],R3
@@ -602,7 +602,7 @@ C_escrita: 	MOV 	R2, M[R1]
 			MOV		R4, FIM_STR
 			CMP		M[R1], R4
 			BR.NZ	C_escrita
-
+;escrever os digitos do recorde
 			MOV		R4,R3
 			MOV		R1,M[recorde]
 			MOV		R2,10
@@ -623,8 +623,7 @@ C_escrita: 	MOV 	R2, M[R1]
 			ADD		R3,48
 			MOV		M[LCD_CURSOR],R4
 			MOV		M[LCD],R3
-
-fim_hsc:	POP		R4
+			POP		R4
 			POP		R3
 			POP		R2
 			POP		R1
@@ -633,12 +632,15 @@ fim_hsc:	POP		R4
 
 
 
-;***********************************************************************************
-;***********************************************************************************
+;*******************************************************************************
+;*******************************************************************************
+
+;funcao de final de jogo com vitoria, escreve que ganhou, para premir o IA
+;e atuliza o highscore
 ganhou:				MOV		M[acertou],R0
 					PUSH	R1
 					MOV		R1,STR_ganhou
-					PUSH	R1
+					PUSH	R1						;escreve que ganhou
 					CALL	passar_str
 					MOV		R1,STR_recomecar
 					PUSH	R1						;escreve para reiniciar
@@ -648,18 +650,20 @@ ganhou:				MOV		M[acertou],R0
 					MOV		M[novo_jogo_],R0
 					JMP		novo_jogo
 
+;funcao se final de jogo com derrota, escreve que perdeu, qual era o codigo e
+;para premir o IA
 perdeu:				MOV		M[perdeu_jogo],R0	;reinicia variavel
 					PUSH	R1
 					PUSH	R2
 					PUSH	R3
 					PUSH	R4
 					MOV		R1,STR_perdeu_jogo	;escreve que perdeu
-					PUSH	R1					;o ciclo remove este PUSH
+					PUSH	R1
 					CALL	passar_str
 					MOV     R3,0
 					MOV     R2,M[codigo]
 					ROL		R2,4
-ciclo_codigo:		ROL		R2,3
+ciclo_codigo:		ROL		R2,3				;escreve o codigo
 					MOV     R1,7h
 					AND		R1,R2
 					ADD     R1,48
@@ -669,7 +673,7 @@ ciclo_codigo:		ROL		R2,3
 					CMP		R3,4
 					BR.NZ	ciclo_codigo
 					MOV		R1,STR_recomecar
-					PUSH	R1						;escreve para reiniciar
+					PUSH	R1					;escreve para reiniciar
 					CALL	esc_linha_seg
 					MOV		M[novo_jogo_],R0
 					POP		R4
@@ -677,6 +681,8 @@ ciclo_codigo:		ROL		R2,3
 					POP		R2
 					POP		R1
 
+;ciclo que comeca um novo jogo, espera que se carregue em IA, depois
+;poe as variaveis a 0, gera o codigo e limpa a janela
 novo_jogo:			PUSH  	R1
 					MOV  	R1,M[contador]
 					INC  	R1
@@ -684,39 +690,43 @@ novo_jogo:			PUSH  	R1
 					POP		R1
 					CMP		M[novo_jogo_],R0		;enquanto nao carregar em IA nao começa
 					BR.Z	novo_jogo
-					MOV		M[cont_jogadas],R0		;limpa contadores
+					MOV		M[cont_jogadas],R0		;limpa variaveis
 					MOV		M[perdeu_jogo],R0
 					MOV		M[acertou],R0
 					MOV		M[novo_jogo_],R0
 					CALL	random
 					CALL	limpar_janela
-nova_tentat:		MOV		M[tentativa],R0
-					PUSH	R1
-					MOV		R3,0
-					MOV		R1,M[cont_jogadas]
-					INC		R1
-					MOV		M[cont_jogadas],R1
-					CALL	wrt_7seg
-					POP		R1
-					CALL	receber_tent
-					PUSH	R1
-					MOV		R1,M[perdeu_jogo]
-					CMP		R1,R0				;se perdeu o jogo nao chama ciclo das tentativas faz logo novo jogo
-					POP		R1
-					JMP.NZ	perdeu
-					CALL	c_tents
-					PUSH	R1
-					MOV		R1,M[acertou]		;caso tenha acertado reinicia
-					CMP		R1,0
-					JMP.NZ	ganhou
-					MOV		R1,M[perdeu_jogo]	;caso tenha perdido o jogo reinicia
-					CMP		R1,0
-					JMP.NZ	perdeu
-					POP		R1
-					JMP		nova_tentat
+;ciclo das tentativas, limpa a variavel, incrementa o contador de jogadas,
+;escreve a jogada no ecra de 7 segmentos, recebe a tentativa, se nao houver
+;jogada acaba o jogo, se houver avalia
+nova_tentat:	MOV		M[tentativa],R0
+				PUSH	R1
+				MOV		R3,0
+				MOV		R1,M[cont_jogadas]
+				INC		R1
+				MOV		M[cont_jogadas],R1
+				CALL	wrt_7seg
+				POP		R1
+				CALL	receber_tent
+				PUSH	R1
+				MOV		R1,M[perdeu_jogo]
+				CMP		R1,R0
+				POP		R1
+				JMP.NZ	perdeu
+				CALL	c_tents
+				PUSH	R1
+				MOV		R1,M[acertou]		;caso tenha acertado reinicia
+				CMP		R1,0
+				JMP.NZ	ganhou
+				MOV		R1,M[perdeu_jogo]	;caso tenha perdido o jogo reinicia
+				CMP		R1,0
+				JMP.NZ	perdeu				;caso contrario recebe nova tentativa
+				POP		R1
+				JMP		nova_tentat
 
+;**********************************inicio**************************************
 
-;**********************************inicio*******************************************
+;inicio do programa, diz para premir o IA, comeca o cronometro e comeca um jogo
 inicio:			PUSH	VarStr_INICIO_JOGO
 				CALL	passar_str
 				PUSH	R1
