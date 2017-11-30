@@ -6,7 +6,10 @@ INT_MASK_ADDR		EQU FFFAh
 INT_MASK 			EQU 1000010001111110b
 IO					EQU     FFFEh
 IO_CURSOR			EQU		FFFCh
-NL					EQU		000Ah
+IO_DISPLAY0 EQU FFF0h
+IO_DISPLAY1 EQU FFF1h
+LCD_CURSOR	EQU		FFF4h
+LCD			EQU		FFF5h
 
 
 
@@ -30,10 +33,12 @@ bolas				WORD	0	;contador bolas
 tracos				WORD	0	;contador traços
 apaga_led			WORD	0	;se for para apagae algum led esta a 1
 cron				WORD	0
+recorde				WORD	12
 VarStr_INICIO_JOGO	STR 	'Carregue no botao IA para iniciar@'
 STR_perdeu_jogo		STR		'Fim do jogo@'
 STR_recomecar		STR		'Carregue em IA para recomecar@'
 STR_ganhou			STR		'Parabens, teve sorte@'
+VarStr_recorde	STR 	'RECORDE --> @'
 
 
 ;*************************************************************************************
@@ -266,7 +271,7 @@ esc_frent:	PUSH	R1
 			POP		R1
 			RETN	1
 ;***********************************************************************************				
-output: 	PUSH	R1
+output:		PUSH	R1
 			PUSH	R2
 			PUSH	R3
 			MOV     R1,M[tentativa]	;coloca a tentativa em R1
@@ -503,6 +508,29 @@ f_sep_R3:	INC		R2			;incrementar o contador de algarismos verificados
 			
 		
 ;***********************************************************************************
+
+		
+		
+wrt_7seg:PUSH	R1
+		PUSH	R2
+		PUSH	R3
+		MOV		R1,M[cont_jogadas]
+		MOV		R2,10
+		DIV		R1,R2
+		MOV		R3,R2
+		ROR		R3,4
+		MOV		R2,10
+		DIV		R1,R2
+		ADD		R3,R2
+		ROR		R3,12
+		MOV		M[IO_DISPLAY0],R3
+		ROR		R3,4
+		MOV		M[IO_DISPLAY1],R3
+		POP		R3
+		POP		R2
+		POP		R1
+		RET
+
 ;***********************************************************************************
 
 
@@ -522,7 +550,6 @@ c_tents:	PUSH	R1
 			CMP		R1,1		;se tiver acertado nesta tentativa acaba o jogo
 			JMP.Z	acertou_tent		;E PRECISO MUDAR PARA COMECAR UM NOVO JOGO
 			MOV		R1,M[cont_jogadas]
-			INC		R1
 			CMP		R1,12	; ve se ja foram feitas 12 jogadas
 			JMP.Z	esgotou_tent	; se sim acaba jogo
 			MOV		M[cont_jogadas],R1
@@ -537,7 +564,57 @@ esgotou_tent:MOV	R1,1
 ;meter contador de jogadas a zero
 ;se nao perdeu o jogo queremos continuar a jogar				
 ;se acertou queremos recomeçar
-				
+;***********************************************************************************
+;****************************highscore**********************************************
+
+esc_hsc:	PUSH	R1
+			PUSH	R2
+			PUSH	R3
+			PUSH	R4;************comparar para ver se é maior, se nao for fim_hsc
+			MOV		R1,M[cont_jogadas]
+			MOV		R2,M[recorde]
+			CMP		R1,R2
+			JMP.NN	High
+			MOV		R1,M[cont_jogadas]
+			MOV		M[recorde],R1
+High:		MOV		R1, VarStr_recorde
+			MOV		R3,8000h
+			MOV		M[LCD_CURSOR],R3
+C_escrita: 	MOV 	R2, M[R1]
+			MOV 	M[LCD], R2
+			INC		R3
+			MOV		M[LCD_CURSOR],R3
+			INC 	R1
+			MOV		R4, FIM_STR 
+			CMP		M[R1], R4
+			BR.NZ	C_escrita
+			
+			MOV		R4,R3
+			MOV		R1,M[recorde]
+			MOV		R2,10
+			MOV		R3,R0
+			DIV		R1,R2
+			ADD		R3,R2
+			ROL		R1,4
+			ADD		R1,R3
+			MOV		R3,R1
+			PUSH	R3
+			SHR		R3,4
+			ADD		R3,48
+			MOV		M[LCD_CURSOR],R4
+			MOV		M[LCD],R3
+			INC		R4
+			POP		R3
+			AND		R3,Fh
+			ADD		R3,48
+			MOV		M[LCD_CURSOR],R4
+			MOV		M[LCD],R3
+					
+fim_hsc:	POP		R4
+			POP		R3
+			POP		R2
+			POP		R1
+			RET
 				
 				
 
@@ -554,6 +631,7 @@ ganhou:				POP		R1
 					PUSH	R1						;escreve para reiniciar
 					CALL	esc_linha_seg
 					POP		R1
+					CALL	esc_hsc
 					JMP		novo_jogo
 
 perdeu:				POP		R1
@@ -565,17 +643,27 @@ perdeu:				POP		R1
 					MOV		R1,STR_recomecar
 					PUSH	R1						;escreve para reiniciar
 					CALL	esc_linha_seg
+					MOV		R1,12
+					MOV		M[cont_jogadas],R1
+					CALL	esc_hsc
 					POP		R1
 
-					
 novo_jogo:			ENI
 					CMP		M[novo_jogo_],R0		;enquanto nao carregar em IA nao começa
 					BR.Z	novo_jogo
 					MOV		M[cont_jogadas],R0		;limpa contadores
+					MOV		M[perdeu],R0
+					MOV		M[acertou],R0
 					MOV		M[novo_jogo_],R0
 					CALL	codigo_secreto
 					CALL	limpar_janela
 nova_tentat:		MOV		M[tentativa],R0
+					PUSH		R1
+					MOV		R1,M[cont_jogadas]
+					INC		R1
+					MOV		M[cont_jogadas],R1
+					CALL	wrt_7seg
+					POP		R1
 					CALL	ligar_leds
 					PUSH	R1
 					MOV		R1,M[perdeu_jogo]
@@ -584,12 +672,13 @@ nova_tentat:		MOV		M[tentativa],R0
 					POP		R1
 					CALL	c_tents
 					PUSH	R1
-					MOV		R1,M[perdeu_jogo]	;caso tenha perdido o jogo reinicia
-					CMP		R1,0
-					JMP.NZ	perdeu				
 					MOV		R1,M[acertou]		;caso tenha acertado reinicia
 					CMP		R1,0
 					JMP.NZ	ganhou
+					MOV		R1,M[perdeu_jogo]	;caso tenha perdido o jogo reinicia
+					CMP		R1,0
+					JMP.NZ	perdeu				
+					
 					POP		R1
 					JMP		nova_tentat
 				
@@ -613,5 +702,6 @@ inicio:			PUSH	VarStr_INICIO_JOGO
 ;***********************************************************************************	
 ;7 segmentos chamar no inicio da jogada antes input (leds)
 ;quando acaba jogo atualizar highscore
+;cicli esc coluna seg escreve primeiro e depois aumenta
 							
 fim:			BR		fim

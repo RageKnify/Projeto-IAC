@@ -1,0 +1,38 @@
+SP_INICIAL	EQU	FDFFh
+IO_DISPLAY0 EQU FFF0h
+IO_DISPLAY1 EQU FFF1h
+
+
+		ORIG	8000h
+cont_tentat		WORD		12
+		ORIG 0000h
+		JMP Inicio
+		
+		
+		
+wrt_7seg:PUSH	R1
+		PUSH	R2
+		PUSH	R3
+		MOV		R1,M[cont_tentat]
+		MOV		R2,10
+		DIV		R1,R2
+		MOV		R3,R2
+		ROR		R3,4
+		MOV		R2,10
+		DIV		R1,R2
+		ADD		R3,R2
+		ROR		R3,12
+		MOV		M[IO_DISPLAY0],R3
+		ROR		R3,4
+		MOV		M[IO_DISPLAY1],R3
+		POP		R3
+		POP		R2
+		POP		R1
+		RET
+		
+Inicio: MOV 	R7, SP_INICIAL
+		MOV 	SP, R7
+		CALL 	wrt_7seg
+		
+		
+fim:	BR		fim
