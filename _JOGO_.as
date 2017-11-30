@@ -433,7 +433,7 @@ del_digito:	PUSH	R1
             POP		R1
             RET
 
-;verifica se ha algarismos na posicao certa
+;verifica quantos algarismos ha na posicao certa
 p_certa:    PUSH	R1
             PUSH	R2
             PUSH	R3
@@ -445,123 +445,130 @@ p_certa:    PUSH	R1
 c_certa:    AND		R1,7h			;ficam os 3 bits menos significativos
             AND		R2,7h
             CMP		R1,R2
-            BR.NZ	ciclo_ROR		;caso nao sejam iguais > ciclo_ROR para passar ao proximo algarismo
+            BR.NZ	pro_digito		;diferentes -> proximo algarismo
             INC		R3				;iguais -> incrementa contador
-            CALL	del_digito		;alteramos os algarismos que eram iguais
-ciclo_ROR:	MOV		R1,M[codigo_m]	;coloca a sequencia secreta no R1
-            MOV		R2,M[tentativa_m];coloca a tentaiva no R2
-            ROR		R1,3			;passa ao proximo algarismo
+            CALL	del_digito		;altera digitos
+;roda o codigo e a tentativa para o proximo algarismo
+pro_digito:	MOV		R1,M[codigo_m]
+            MOV		R2,M[tentativa_m]
+            ROR		R1,3
             ROR		R2,3
             MOV		M[codigo_m],R1	;coloca de volta na memoria
             MOV		M[tentativa_m],R2
-            INC		R4				;incrementa contador de ciclos_ROR
-            CMP		R4,4			;verifica se verificou os 4 algarismos, se sim retorna
+            INC		R4				;incrementa contador de rotacoes
+            CMP		R4,4			;se tiver verificado os 4 sai
             JMP.NZ	c_certa
+;roda os ultimos 4 bits(estao vazios pois usamos 12)
             ROR		R1,4
             MOV		M[codigo_m],R1
             ROR		R2,4
             MOV		M[tentativa_m],R2
-            MOV		M[certos],R3
+            MOV		M[certos],R3	;guarda o numero de 'x's
             POP		R4
             POP		R3
             POP		R2
             POP		R1
             RET
 
-
+;verifica quantos algarismos ha na posicao errada
 p_errada:	PUSH	R1
-          PUSH	R2
-          PUSH	R3
-          PUSH	R4
-          PUSH	R5
-          MOV		R3,R0
-          MOV		R4,R0
-          MOV		R5,R0
-c_errada:	CMP		R5,4		;verifica se testou os 4 algarismos da sequencia secreta
-          JMP.Z	r_tenta		;se sim passar ao proximo algarismo da tentativa
-          MOV		R1,M[codigo_m]	;coloca a sequencia secreta no R1
-          MOV		R2,M[tentativa_m]	;coloca a tentativa no R2
-          AND		R1,7h		;ficam os 3 bits menos significativos
-          AND		R2,7h
-          CMP		R1,0h		;verifica se o algarismo e 0
-          BR.Z	  r_certo	;se for == 0 rodar para o proximo algarismo
-          CMP		R1,R2
-          BR.NZ	r_certo
-          INC		R4			;se forem iguais aumentar o contador de respostas corretas
-          CALL	del_digito	;alteramos os algarismos que eram iguais
-r_certo:	MOV		R1,M[codigo_m]	;coloca a sequencia secreta no R1
-          ROR		R1,3		;roda para o proximo lagarismo
-          MOV		M[codigo_m],R1	;coloca de volta na memoria
-          INC		R5			;incrementar contador de rotacoes da sequencia
-          JMP		c_errada	;testar com o novo algarismo da sequencia
-r_tenta:	ROR   R1,4
-          MOV   M[codigo_m],R1
-          CMP		R3,4		;verifica se testou os 4 algarismos da tentativa
-          BR.NZ	r_t_		;se tiver
-          ROR   R2,4
-          MOV   M[tentativa_m],R2
-          MOV		M[errados],R4
-          POP		R5
-          POP		R4
-          POP		R3
-          POP		R2
-          POP		R1
-          RET
+			PUSH	R2
+			PUSH	R3
+			PUSH	R4
+			PUSH	R5
+			MOV		R3,R0
+			MOV		R4,R0
+			MOV		R5,R0
+;ve se ja estou este digito da tentativa para os 4 do codigo
+c_errada:	CMP		R5,4
+			JMP.Z	r_tenta		;se sim passar ao proximo algarismo da tentativa
+			MOV		R1,M[codigo_m]
+			MOV		R2,M[tentativa_m]
+			AND		R1,7h		;ficam os 3 bits menos significativos
+			AND		R2,7h
+			CMP		R1,0h		;verifica se o algarismo e 0
+			BR.Z	r_codigo		;se for == 0 -> proximo digito
+			CMP		R1,R2
+			BR.NZ	r_codigo		;diferentes -> proximo digito
+			INC		R4			;iguais -> incrementa contador
+			CALL	del_digito	;altera digitos
+;roda o codigo para o proximo algarismo
+r_codigo:	MOV		R1,M[codigo_m]
+			ROR		R1,3
+			MOV		M[codigo_m],R1	;coloca de volta na memoria
+			INC		R5			;incrementar contador de rotacoes da sequencia
+			JMP		c_errada	;testar com o novo algarismo da sequencia
 
-r_t_:	    MOV		R2,M[tentativa_m];colocar a tentativa em R2
-          ROR		R2,3			;rodar para o proximo algarismo da tentativa
-          MOV		M[tentativa_m],R2;colocar de volta na memoria
-          INC		R3				;incrementar contador de rotacoes da tentativa
-          MOV		R5,R0			;reiniciar contador de rotacoes da sequencia
-          JMP		c_errada		;testar com o novo algarismo da tentativa
-
-
-;***********************************************************************************
-
-
-
-wrt_7seg:PUSH	R1
-		PUSH	R2
-		PUSH	R3
-		MOV		R1,M[cont_jogadas]
-		MOV		R2,10
-		DIV		R1,R2
-		MOV		R3,R2
-		ROR		R3,4
-		MOV		R2,10
-		DIV		R1,R2
-		ADD		R3,R2
-		ROR		R3,12
-		MOV		M[IO_DISPLAY0],R3
-		ROR		R3,4
-		MOV		M[IO_DISPLAY1],R3
-		POP		R3
-		POP		R2
-		POP		R1
-		RET
-
-;***********************************************************************************
-
-c_tents:	PUSH	R1
-			MOV		R1,M[codigo]
-			MOV		M[codigo_m],R1
-			MOV		R1,M[tentativa]
-			MOV		M[tentativa_m],R1
+;roda a tentativa para o proximo algarismo
+r_tenta:	ROR		R1,4
+			MOV   	M[codigo_m],R1
+			CMP		R3,4		;verifica se testou os 4 algarismos da tentativa
+			BR.Z	f_errada
+;se nao tiver roda
+            MOV		R2,M[tentativa_m]
+			ROR		R2,3
+			MOV		M[tentativa_m],R2	;colocar de volta na memoria
+			INC		R3					;incrementa contador de rotacoes
+			MOV		R5,R0				;reinicia contador de rotacoes da sequencia
+			JMP		c_errada			;testar com o novo algarismo da tentativa
+;se tiver acaba
+f_errada:   ROR   	R2,4
+			MOV   	M[tentativa_m],R2
+			MOV		M[errados],R4
+			POP		R5
+			POP		R4
+			POP		R3
+			POP		R2
 			POP		R1
-			CALL	p_certa		;verificar se ha algum algarismo na posicao certa
-			CALL	p_errada	;verificar se ha algum algarismo na posicao certa
-			CALL	atua_R3		;codifica R3
-			CALL	output		;escreve o output na janela de texto
-			PUSH	R1
-			MOV		R1,M[acertou]
-			CMP		R1,1		;se tiver acertado nesta tentativa acaba o jogo
-			JMP.Z	acertou_tent		;E PRECISO MUDAR PARA COMECAR UM NOVO JOGO
-			MOV		R1,M[cont_jogadas]
-			CMP		R1,12	; ve se ja foram feitas 12 jogadas
-			JMP.Z	esgotou_tent	; se sim acaba jogo
-			MOV		M[cont_jogadas],R1
-acertou_tent:POP		R1
 			RET
+
+;***********************************************************************************
+
+
+;funcao que escreve o numero da jogada atual no ecra de 7 segmentos
+wrt_7seg:	PUSH	R1
+			PUSH	R2
+			PUSH	R3
+			MOV		R1,M[cont_jogadas]
+			MOV		R2,10
+			DIV		R1,R2
+			MOV		R3,R2
+			ROR		R3,4
+			MOV		R2,10
+			DIV		R1,R2
+			ADD		R3,R2
+			ROR		R3,12
+			MOV		M[IO_DISPLAY0],R3
+			ROR		R3,4
+			MOV		M[IO_DISPLAY1],R3
+			POP		R3
+			POP		R2
+			POP		R1
+			RET
+
+;***********************************************************************************
+
+;funcao que trata da tentativa
+c_tents:		PUSH	R1
+				MOV		R1,M[codigo]
+				MOV		M[codigo_m],R1
+				MOV		R1,M[tentativa]
+				MOV		M[tentativa_m],R1
+				POP		R1
+				CALL	p_certa		;verificar se ha algum algarismo na posicao certa
+				CALL	p_errada	;verificar se ha algum algarismo na posicao certa
+				CALL	atua_R3		;codifica R3
+				CALL	output		;escreve o output na janela de texto
+				PUSH	R1
+				MOV		R1,M[acertou]
+				CMP		R1,1		;se tiver acertado nesta tentativa acaba o jogo
+				JMP.Z	acertou_tent		;E PRECISO MUDAR PARA COMECAR UM NOVO JOGO
+				MOV		R1,M[cont_jogadas]
+				CMP		R1,12	; ve se ja foram feitas 12 jogadas
+				JMP.Z	esgotou_tent	; se sim acaba jogo
+				MOV		M[cont_jogadas],R1
+acertou_tent:	POP		R1
+				RET
 
 esgotou_tent:MOV	R1,1
 			MOV		M[perdeu_jogo],R1
