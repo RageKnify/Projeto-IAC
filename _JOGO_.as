@@ -221,6 +221,7 @@ todos_apagados:	MOV		R1,1			;se tiverem apagado todos perdeu jogo
 ;***********************************************************************************
 ;********************************limpar a janela de texto******************
 
+;escreve ' ' em todos os espacos da janela
 limpar_janela:	PUSH	R1
 				PUSH	R2
 				MOV		R1,R0
@@ -239,8 +240,8 @@ cicle:			MOV		M[IO_CURSOR],R1
 				BR.Z	fim_limpar
 				ROL		R1,8
 				BR		cicle
-fim_limpar:		MOV		M[loc_cursor],R0
-				MOV		M[IO_CURSOR],R0;meter IO a zero
+fim_limpar:		MOV		M[loc_cursor],R0	;poe o cursor de volta no 0
+				MOV		M[IO_CURSOR],R0
 				POP		R2
 				POP		R1
 				RET
@@ -248,18 +249,18 @@ fim_limpar:		MOV		M[loc_cursor],R0
 ;***********************************************************************************
 ;***************************CODIGO SECRETO******************************************
 
-
-random:     PUSH	R1			; gera o numero dos jogos
+;gerador do codigo
+random:     PUSH	R1
 			PUSH	R2
 			PUSH	R3
 			PUSH	R4
 			PUSH	R5
-			MOV		R1,M[codigo]; verifica se ja existe um codigo
+			MOV		R1,M[codigo]	; verifica se ja existe um codigo
 			CMP		R1,0
-			BR.NZ	E_PAR		;se houver aplica a funcao fornecida
-			MOV		R1,M[contador]	;se nao houver utiliza o segundo atual
+			BR.NZ	E_PAR			;se houver aplica a funcao fornecida
+			MOV		R1,M[contador]	;se nao houver utiliza o contador
 E_PAR:		MOV		R2,R1
-       		AND		R2,1h		;ve se o N0 e par
+       		AND		R2,1h			;ve se e par
        		CMP		R2,0
        		BR.Z    ran_p
        		BR      ran_i
@@ -267,8 +268,8 @@ ran_p:		ROR     R1,1
        		BR      ran_ambos
 ran_i:  	XOR     R1,MASC
             ROR     R1,1
-ran_ambos: 	MOV		R3,0		;vai dividir por 6 e somar 1 a cada digito para que os digitos estejam entre 1 e 6
-       		MOV		R4,0
+ran_ambos: 	MOV		R3,0		;vai dividir por 6 e somar 1 a cada digito
+       		MOV		R4,0		;para que os digitos estejam entre 1 e 6
 c_div6:		MOV		R2,Fh
    			AND		R2,R1
    			MOV		R5,6
@@ -295,14 +296,17 @@ c_div6:		MOV		R2,Fh
 esc_frent:  PUSH	R1
             MOV	    R1,M[loc_cursor]
             MOV	    M[IO_CURSOR],R1
-            MOV	    R1,M[SP+3];mete o caracter num registo
+            MOV	    R1,M[SP+3]		;mete o caracter num registo
             MOV	    M[IO],R1
             MOV     R1,M[loc_cursor]
             INC	    R1
             MOV	    M[loc_cursor],R1
             POP	    R1
             RETN	1
+
 ;**********************************************************************************
+
+;output resultante da jogada
 output: 	PUSH	R1
 			PUSH	R2
 			PUSH	R3
@@ -310,6 +314,7 @@ output: 	PUSH	R1
             MOV     R1,M[tentativa]
             ROL     R1,4
 
+;escreve os 3 primeiros digitos da tentativa
 cic_output: ROL     R1,3
             MOV     R2,7
             AND     R2,R1
@@ -323,6 +328,7 @@ cic_output: ROL     R1,3
             CMP     R3,3
             BR.NZ   cic_output
 
+;escreve o ultimo digito da tentativa
             ROL     R1,3
             MOV     R2,7
             AND     R2,R1
@@ -333,6 +339,7 @@ cic_output: ROL     R1,3
             PUSH    R2
             CALL    esc_frent
 
+;escreve os 'x's
 X_:         POP     R3               ;R3 fica com 0x0o onde 'x' e o numero de certas e 'o' e o numero de erradas
             PUSH    R3
             SHR     R3,8
@@ -349,6 +356,7 @@ C_x:    	CMP     R2,R3
         	INC     R2
         	BR      C_x
 
+;escreve os 'o's
 O_:         POP     R3
             PUSH    R3
             AND     R3,Fh           ;retira o numero de bolas
@@ -361,6 +369,7 @@ C_o:    	CMP     R2,R3
         	INC     R2
         	BR      C_o
 
+;escreve os '-'s
 Trc:        POP     R3
             PUSH    R3
             MOV     R2,Fh
@@ -369,7 +378,7 @@ Trc:        POP     R3
             ADD     R3,R2	;R3 fica com total de bolas e cruzes
         	MOV     R2,4
         	SUB		R2,R3	; R2 fica com a diferença
-C_trc:  	CMP     R2,0		;**********************************************output nunca acaba
+C_trc:  	CMP     R2,0
         	BR.Z	fim_out			;depois de imprimir todos vai retornar
         	MOV     R1, '-'
         	PUSH	R1
@@ -381,9 +390,9 @@ fim_out:	MOV		R1,M[loc_cursor] ;no fim do output deixa o cursor na linha seguint
 			ADD		R1,100h
 			MOV		M[loc_cursor],R1
 			MOV		M[IO_CURSOR],R1
-			POP		R3				;**************************este pop deve tar a mais
-			POP		R2				;***************************************************devem tar trocados
-			POP		R1				;*************************************************
+			POP		R3
+			POP		R2
+			POP		R1
 			RET
 
 ;*****************************************************************************
