@@ -1,136 +1,64 @@
-SP_INICIAL  		EQU		FDFFh
-FIM_STR 			EQU 	'@'
-IO_TEMP				EQU		FFF6h
-IO_TC				EQU		FFF7h
-INT_MASK_ADDR		EQU 	FFFAh
-INT_MASK 			EQU 	1000010001111110b
-IO					EQU     FFFEh
-IO_CURSOR			EQU		FFFCh
-IO_DISPLAY0 		EQU 	FFF0h
-IO_DISPLAY1 		EQU 	FFF1h
-LCD_CURSOR			EQU		FFF4h
-LCD					EQU		FFF5h
-MASC				EQU		1000000000010110b
-LEDS				EQU 	FFF8h
+SP_INICIAL    EQU   FDFFh
+FIM_STR       EQU   '@'
+IO_TEMP       EQU   FFF6h
+IO_TC         EQU   FFF7h
+INT_MASK_ADDR EQU   FFFAh
+INT_MASK      EQU   1000010001111110b
+IO            EQU   FFFEh
+IO_CURSOR     EQU   FFFCh
+IO_DISPLAY0   EQU   FFF0h
+IO_DISPLAY1   EQU   FFF1h
+LCD_CURSOR    EQU   FFF4h
+LCD           EQU   FFF5h
+MASC          EQU   1000000000010110b
+LEDS          EQU   FFF8h
 
 
 
-;*************************************************************************************
-;****************************MEMORIA*************************************************
+;******************************************************************************
+;****************************MEMORIA*******************************************
 
-					ORIG	8000h
-codigo				WORD	0	;codigo nao modificavel
-codigo_m			WORD	0	;codigo modificavel
-tentativa			WORD	0	;tentativa nao modificavel
-tentativa_m			WORD	0	;tentativa modificavel
-loc_cursor			WORD	0	;localizaçao do cursor da janela de texto
-novo_jogo_			WORD	0	;define se se deve comecar um novo jogo
-cont_jogadas		WORD	0	;contador de jogadas == pont_act
-acertou				WORD	0	;se acertou esta a 1
-perdeu_jogo			WORD	0	;1 ou 0 consoante perdeu jogo ou nao
-apaga_led			WORD	0	;se for para apagar algum led esta a 1
-cron				WORD	0	;cron, para os LEDS
-recorde				WORD	12
-contador    		WORD  	0	;define o primeiro codigo
-certos				WORD	0	;contador de certos
-errados				WORD	0	;contador errados
+              ORIG    8000h
+codigo        WORD    0    ;codigo nao modificavel
+codigo_m      WORD    0    ;codigo modificavel
+tentativa     WORD    0    ;tentativa nao modificavel
+tentativa_m   WORD    0    ;tentativa modificavel
+loc_cursor    WORD    0    ;localizaçao do cursor da janela de texto
+novo_jogo_    WORD    0    ;define se se deve comecar um novo jogo
+cont_jogadas  WORD    0    ;contador de jogadas == pont_act
+acertou       WORD    0    ;se acertou esta a 1
+perdeu_jogo   WORD    0    ;1 ou 0 consoante perdeu jogo ou nao
+apaga_led     WORD    0    ;se for para apagar algum led esta a 1
+cron          WORD    0    ;cron, para os LEDS
+recorde       WORD    12
+contador      WORD    0    ;define o primeiro codigo
+certos        WORD    0    ;contador de certos
+errados       WORD    0    ;contador errados
 
-VarStr_INICIO_JOGO	STR 	'Carregue no botao IA para iniciar@'
-STR_perdeu_jogo		STR		'Fim do jogo. O codigo era: @'
-STR_recomecar		STR		'Carregue em IA para recomecar@'
-STR_ganhou			STR		'Parabens, acertou@'
-VarStr_recorde		STR 	'RECORDE --> @'
+VarStr_INICIO_JOGO    STR   'Carregue no botao IA para iniciar@'
+STR_perdeu_jogo       STR   'Fim do jogo. O codigo era: @'
+STR_recomecar         STR   'Carregue em IA para recomecar@'
+STR_ganhou            STR   'Parabens, acertou@'
+VarStr_recorde        STR   'RECORDE --> @'
 
 
 ;******************************************************************************
 ;*                               INTERRUPÇOES                                 *
 ;******************************************************************************
 
-			ORIG	FE01h
-INT1		WORD	INT1F
-INT2		WORD	INT2F
-INT3		WORD	INT3F
-INT4		WORD	INT4F
-INT5		WORD	INT5F
-INT6		WORD	INT6F
+        ORIG  FE01h
+INT1    WORD  INT1F
+INT2    WORD  INT2F
+INT3    WORD  INT3F
+INT4    WORD  INT4F
+INT5    WORD  INT5F
+INT6    WORD  INT6F
 
-			ORIG	FE0Fh
-INTF		WORD 	INTFF
+        ORIG  FE0Fh
+INTF    WORD  INTFF
 
-			ORIG	FE0Ah
-INTA		WORD	INTAF
-
-
-;******************************************************************************
-;                          Ciclos das interrupcoes                            *
-;******************************************************************************
-
-
-;interrupcoes das teclas
-;colocam na variavel da tentativa o novo digito
-INT1F:		PUSH	R1
-			MOV		R1,M[tentativa]
-			SHL		R1,3
-			ADD		R1,1
-			MOV		M[tentativa],R1
-			POP		R1
-			RTI
-INT2F:		PUSH	R1
-			MOV		R1,M[tentativa]
-			SHL		R1,3
-			ADD		R1,2
-			MOV		M[tentativa],R1
-			POP		R1
-			RTI
-INT3F:		PUSH	R1
-			MOV		R1,M[tentativa]
-			SHL		R1,3
-			ADD		R1,3
-			MOV		M[tentativa],R1
-			POP		R1
-			RTI
-INT4F:		PUSH	R1
-			MOV		R1,M[tentativa]
-			SHL		R1,3
-			ADD		R1,4
-			MOV		M[tentativa],R1
-			POP		R1
-			RTI
-INT5F:		PUSH	R1
-			MOV		R1,M[tentativa]
-			SHL		R1,3
-			ADD		R1,5
-			MOV		M[tentativa],R1
-			POP		R1
-			RTI
-INT6F:		PUSH	R1
-			MOV		R1,M[tentativa]
-			SHL		R1,3
-			ADD		R1,6
-			MOV		M[tentativa],R1
-			POP		R1
-			RTI
-
-;ativa a variavel novo jogo
-INTAF:			PUSH	R1
-				MOV		R1,1
-				MOV		M[novo_jogo_],R1
-				POP		R1
-				RTI
-
-;interrupcao do cronometro, aumenta cronometro de 0,5 em 0,5 segundos
-INTFF:			PUSH	R1
-				MOV		R1,M[cron]
-				INC		R1
-				MOV		M[cron],R1
-				MOV		R1,5
-				MOV		M[IO_TEMP],R1
-				MOV		R1,1
-				MOV		M[IO_TC],R1
-				POP		R1
-				RTI
-
-
+        ORIG  FE0Ah
+INTA    WORD  INTAF
 
 
 ;******************************************************************************
@@ -148,37 +76,109 @@ INTFF:			PUSH	R1
 			JMP		inicio
 
 ;******************************************************************************
+;                          Ciclos das interrupcoes                            *
+;******************************************************************************
+
+
+;interrupcoes das teclas
+;colocam na variavel da tentativa o novo digito
+INT1F:  PUSH  R1
+        MOV   R1,M[tentativa]
+        SHL   R1,3
+        ADD   R1,1
+        MOV   M[tentativa],R1
+        POP   R1
+        RTI
+INT2F:  PUSH  R1
+        MOV   R1,M[tentativa]
+        SHL   R1,3
+        ADD   R1,2
+        MOV   M[tentativa],R1
+        POP   R1
+        RTI
+INT3F:  PUSH  R1
+        MOV   R1,M[tentativa]
+        SHL   R1,3
+        ADD   R1,3
+        MOV   M[tentativa],R1
+        POP   R1
+        RTI
+INT4F:  PUSH  R1
+        MOV   R1,M[tentativa]
+        SHL   R1,3
+        ADD   R1,4
+        MOV   M[tentativa],R1
+        POP   R1
+        RTI
+INT5F:  PUSH  R1
+        MOV   R1,M[tentativa]
+        SHL   R1,3
+        ADD   R1,5
+        MOV   M[tentativa],R1
+        POP   R1
+        RTI
+INT6F:  PUSH  R1
+        MOV   R1,M[tentativa]
+        SHL   R1,3
+        ADD   R1,6
+        MOV   M[tentativa],R1
+        POP   R1
+        RTI
+
+;ativa a variavel novo jogo
+INTAF:  PUSH  R1
+        MOV   R1,1
+        MOV   M[novo_jogo_],R1
+        POP   R1
+        RTI
+
+;interrupcao do cronometro, aumenta cronometro de 0,5 em 0,5 segundos
+INTFF:  PUSH  R1
+        MOV   R1,M[cron]
+        INC   R1
+        MOV   M[cron],R1
+        MOV   R1,5
+        MOV   M[IO_TEMP],R1
+        MOV   R1,1
+        MOV   M[IO_TC],R1
+        POP   R1
+        RTI
+
+
+
+
+;******************************************************************************
 ;*                        Ciclo que escreve string na janela                  *
 ;******************************************************************************
 
 ;mete cursor na linha seguinte na primeira coluna
 esc_linha_seg:	PUSH	R1
-				MOV		R1,M[loc_cursor]
-				AND		R1,FF00h
-				ADD		R1,100h
-				MOV		M[loc_cursor],R1
-				POP		R1
+        				MOV		R1,M[loc_cursor]
+        				AND		R1,FF00h
+        				ADD		R1,100h
+        				MOV		M[loc_cursor],R1
+        				POP		R1
 
 ;escreve a STR no endereco que foi PUSHED
 passar_str:		PUSH	R1
-				PUSH	R2
-				PUSH	R3
-				MOV     R1,M[SP+5]        ;coloca endereço dos caracteres em R1
-				MOV		R3,M[loc_cursor]  ;coloca localizaçao do cursor em R3
-				MOV		M[IO_CURSOR],R3
-escrever:		MOV 	R2, M[R1]		  ;mete caracter em R2
-				CMP		R2,FIM_STR
-				BR.Z	end_out
-				MOV		M[IO],R2		;escreve caracter na janela
-				INC		R1
-				INC		R3				;incrementa cursor
-				MOV		M[IO_CURSOR],R3
-				BR		escrever
-end_out:		MOV		M[loc_cursor],R3;guarda a localizaçao do cursor
-				POP		R3
-				POP		R2
-				POP		R1
-				RETN	1
+      				PUSH	R2
+      				PUSH	R3
+      				MOV     R1,M[SP+5]        ;coloca endereço dos caracteres em R1
+      				MOV		R3,M[loc_cursor]  ;coloca localizaçao do cursor em R3
+      				MOV		M[IO_CURSOR],R3
+escrever:		 MOV 	R2, M[R1]		  ;mete caracter em R2
+      				CMP		R2,FIM_STR
+      				BR.Z	end_out
+      				MOV		M[IO],R2		;escreve caracter na janela
+      				INC		R1
+      				INC		R3				;incrementa cursor
+      				MOV		M[IO_CURSOR],R3
+      				BR		escrever
+end_out:		  MOV		M[loc_cursor],R3;guarda a localizaçao do cursor
+      				POP		R3
+      				POP		R2
+      				POP		R1
+      				RETN	1
 
 ;***********************************************************************************
 ;*                                CODIGO SECRETO                                   *
@@ -186,44 +186,44 @@ end_out:		MOV		M[loc_cursor],R3;guarda a localizaçao do cursor
 
 ;gerador do codigo
 random:     PUSH	R1
-			PUSH	R2
-			PUSH	R3
-			PUSH	R4
-			PUSH	R5
-			MOV		R1,M[codigo]	; verifica se ja existe um codigo
-			CMP		R1,0
-			BR.NZ	E_PAR			;se houver aplica a funcao fornecida
-			MOV		R1,M[contador]	;se nao houver utiliza o contador
-E_PAR:		MOV		R2,R1
-       		AND		R2,1h			;ve se e par
-       		CMP		R2,0
-       		BR.Z    ran_p
-       		BR      ran_i
-ran_p:		ROR     R1,1
-       		BR      ran_ambos
-ran_i:  	XOR     R1,MASC
+      			PUSH	R2
+      			PUSH	R3
+      			PUSH	R4
+      			PUSH	R5
+      			MOV		R1,M[codigo]	; verifica se ja existe um codigo
+      			CMP		R1,0
+      			BR.NZ	E_PAR			;se houver aplica a funcao fornecida
+      			MOV		R1,M[contador]	;se nao houver utiliza o contador
+E_PAR:		  MOV		R2,R1
+         		AND		R2,1h			;ve se e par
+         		CMP		R2,0
+         		BR.Z    ran_p
+         		BR      ran_i
+ran_p:		  ROR     R1,1
+            BR      ran_ambos
+ran_i:      XOR     R1,MASC
             ROR     R1,1
 ran_ambos: 	MOV		R3,0		;vai dividir por 6 e somar 1 a cada digito
-       		MOV		R4,0		;para que os digitos estejam entre 1 e 6
-c_div6:		MOV		R2,Fh
-   			AND		R2,R1
-   			MOV		R5,6
-   			DIV		R2,R5
-   			INC		R5
-   			ADD		R3,R5
-   			ROR		R3,3
-   			ROR		R1,4
-   			INC		R4
-   			CMP		R4,4
-   			BR.NZ	c_div6
-			ROR		R3,4
-   			MOV		M[codigo],R3	;guarda o novo codigo na memoria
-   			POP		R5
-   			POP		R4
-   			POP		R3
-   			POP		R2
-   			POP		R1
-   			RET
+            MOV		R4,0		;para que os digitos estejam entre 1 e 6
+c_div6:     MOV		R2,Fh
+            AND		R2,R1
+            MOV		R5,6
+            DIV		R2,R5
+            INC		R5
+            ADD		R3,R5
+            ROR		R3,3
+            ROR		R1,4
+            INC		R4
+            CMP		R4,4
+            BR.NZ	c_div6
+            ROR		R3,4
+            MOV		M[codigo],R3	;guarda o novo codigo na memoria
+            POP		R5
+            POP		R4
+            POP		R3
+            POP		R2
+            POP		R1
+            RET
 
 ;***********************************************************************************
 ;*                            Limpar a janela de texto                             *

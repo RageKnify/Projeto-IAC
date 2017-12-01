@@ -16,10 +16,11 @@
 	LCD_CURSOR                       FFF4         CONSTANT
 	LCD                              FFF5         CONSTANT
 	MASC                             8016         CONSTANT
-	tentativa                        8000         VARIABLE
-	tentativa_m                      8001         VARIABLE
-	codigo                           8002         VARIABLE
-	codigo_m                         8003         VARIABLE
+	LEDS                             FFF8         CONSTANT
+	codigo                           8000         VARIABLE
+	codigo_m                         8001         VARIABLE
+	tentativa                        8002         VARIABLE
+	tentativa_m                      8003         VARIABLE
 	loc_cursor                       8004         VARIABLE
 	novo_jogo_                       8005         VARIABLE
 	cont_jogadas                     8006         VARIABLE
@@ -31,14 +32,11 @@
 	contador                         800C         VARIABLE
 	certos                           800D         VARIABLE
 	errados                          800E         VARIABLE
-	cruzes                           800F         VARIABLE
-	bolas                            8010         VARIABLE
-	tracos                           8011         VARIABLE
-	VarStr_INICIO_JOGO               8012           STRING
-	STR_perdeu_jogo                  8034           STRING
-	STR_recomecar                    8040           STRING
-	STR_ganhou                       805E           STRING
-	VarStr_recorde                   8073           STRING
+	VarStr_INICIO_JOGO               800F           STRING
+	STR_perdeu_jogo                  8031           STRING
+	STR_recomecar                    804D           STRING
+	STR_ganhou                       806B           STRING
+	VarStr_recorde                   807D           STRING
 	INT1                             FE01         VARIABLE
 	INT2                             FE02         VARIABLE
 	INT3                             FE03         VARIABLE
@@ -54,64 +52,61 @@
 	INT5F                            0036            LABEL
 	INT6F                            0040            LABEL
 	INTAF                            004A            LABEL
-	codi_12                          0051            LABEL
-	c_codi                           0057            LABEL
-	esc_linha_seg                    0069            LABEL
-	passar_str                       0073            LABEL
-	escrever                         007C            LABEL
-	end_out                          0087            LABEL
-	INTFF                            008D            LABEL
-	apagar_led                       009D            LABEL
-	ligar_leds                       00A4            LABEL
-	travao                           00AD            LABEL
-	sai                              00BE            LABEL
-	todos_apagados                   00C4            LABEL
-	limpar_janela                    00CC            LABEL
-	cicle                            00CF            LABEL
-	fim_limpar                       00E6            LABEL
-	random                           00ED            LABEL
-	E_PAR                            00F9            LABEL
-	ran_p                            0100            LABEL
-	ran_i                            0102            LABEL
-	ran_ambos                        0105            LABEL
-	c_div6                           0109            LABEL
-	esc_frent                        011F            LABEL
-	output                           012F            LABEL
-	cic_output                       0137            LABEL
-	X_                               0157            LABEL
-	n_acertou                        0161            LABEL
-	C_x                              0163            LABEL
-	O_                               016C            LABEL
-	C_o                              0172            LABEL
-	Trc                              017B            LABEL
-	C_trc                            0185            LABEL
-	fim_out                          018F            LABEL
-	atua_R3                          019D            LABEL
-	Conta_x                          01A1            LABEL
-	Ciclo_x                          01A5            LABEL
-	Conta_o                          01AB            LABEL
-	Ciclo_o                          01B0            LABEL
-	f_atua_R3                        01B6            LABEL
-	mais_nove                        01B9            LABEL
-	p_certa                          01C8            LABEL
-	c_certa                          01D2            LABEL
-	ciclo_ROR                        01DB            LABEL
-	p_errada                         01F7            LABEL
-	c_errada                         01FF            LABEL
-	r_certo                          0213            LABEL
-	r_tenta                          021B            LABEL
-	r_t_                             022C            LABEL
-	wrt_7seg                         0235            LABEL
-	c_tents                          024D            LABEL
-	acertou_tent                     026E            LABEL
-	esgotou_tent                     0270            LABEL
-	esc_hsc                          0276            LABEL
-	High                             0285            LABEL
-	C_escrita                        028B            LABEL
-	fim_hsc                          02B3            LABEL
-	ganhou                           02B8            LABEL
-	perdeu                           02CB            LABEL
+	INTFF                            0051            LABEL
+	esc_linha_seg                    0061            LABEL
+	passar_str                       006B            LABEL
+	escrever                         0074            LABEL
+	end_out                          007F            LABEL
+	random                           0085            LABEL
+	E_PAR                            0091            LABEL
+	ran_p                            0098            LABEL
+	ran_i                            009A            LABEL
+	ran_ambos                        009D            LABEL
+	c_div6                           00A1            LABEL
+	limpar_janela                    00B8            LABEL
+	cicle                            00BB            LABEL
+	fim_limpar                       00D2            LABEL
+	wrt_7seg                         00D9            LABEL
+	receber_tent                     00F1            LABEL
+	travao                           00FA            LABEL
+	apagar_led                       010A            LABEL
+	jogou                            0111            LABEL
+	todos_apagados                   0117            LABEL
+	p_certa                          011F            LABEL
+	c_certa                          0129            LABEL
+	pro_digito                       0132            LABEL
+	p_errada                         014E            LABEL
+	c_errada                         0156            LABEL
+	r_codigo                         016A            LABEL
+	r_tenta                          0172            LABEL
+	f_errada                         0181            LABEL
+	atua_R3                          018C            LABEL
+	Conta_x                          0190            LABEL
+	Ciclo_x                          0194            LABEL
+	Conta_o                          019A            LABEL
+	Ciclo_o                          019F            LABEL
+	f_atua_R3                        01A5            LABEL
+	del_digito                       01A8            LABEL
+	esc_frent                        01B7            LABEL
+	output                           01C7            LABEL
+	cic_output                       01CF            LABEL
+	X_                               01EF            LABEL
+	n_acertou                        01F9            LABEL
+	C_x                              01FB            LABEL
+	O_                               0204            LABEL
+	C_o                              020A            LABEL
+	Trc                              0213            LABEL
+	C_trc                            021D            LABEL
+	fim_out                          0227            LABEL
+	c_tents                          0235            LABEL
+	acertou_tent                     0256            LABEL
+	esgotou_tent                     0258            LABEL
+	esc_hsc                          025E            LABEL
+	High                             026D            LABEL
+	C_escrita                        0273            LABEL
+	ganhou                           02A0            LABEL
+	perdeu                           02B4            LABEL
+	ciclo_codigo                     02C4            LABEL
 	novo_jogo                        02DC            LABEL
-	nova_tentat                      02FC            LABEL
-	inicio                           032E            LABEL
-	fim                              0341            LABEL
+	nova_tentat                      02F2            LABEL
+	inicio                           031A            LABEL
